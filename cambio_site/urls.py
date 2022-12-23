@@ -16,6 +16,11 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path
 
+# imported views
+from cambio import views
+
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('cambio/', include('cambio.urls')),
+    path('', views.index),
 ]
