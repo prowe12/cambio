@@ -1,5 +1,5 @@
 """
-benchly app URL Configuration
+cambio app URL Configuration
 """
 from django.urls import path
 

@@ -14,8 +14,6 @@ from plotly.graph_objs import Scatter
 import numpy as np
 from django.db.models import Min, Max
 
-from .models import ClimInputs, ClimOutputs
-
 
 def index(request):
     # Values that must be in the database
@@ -34,13 +32,15 @@ def index(request):
     years = []
 
     # SQL: select * from ClimInputs
-    climateinputs = ClimInputs.objects.all()
+    # climateinputs = ClimInputs.objects.all()
     for scenario in scenarios:
         # Django ORM for SQL command: select scenario,year from ClimateOutputs where scenario=scenario
-        coutp = (ClimOutputs.objects.only('scenario', 'year', climvar)).filter(scenario=scenario)
+        # coutp = (ClimOutputs.objects.only('scenario', 'year', climvar)).filter(scenario=scenario)
         # Get x and y values for timeseries plot
-        years.append([x.year for x in coutp])
-        climvarvals.append([getattr(x, climvar) for x in coutp])
+        # years.append([x.year for x in coutp])
+        #climvarvals.append([getattr(x, climvar) for x in coutp])
+        years = np.linspace(1700, 2100)
+        climvarvals = [years]
 
     colors = [
         'red',
@@ -96,50 +96,53 @@ def index(request):
 
     disp_outyear = {}
     # SQL: disp_inp <-- select * from ClimInputs where scenario=disp_scenario
-    disp_inp = get_object_or_404(ClimInputs, scenario=disp_scenario)
+    #disp_inp = get_object_or_404(ClimInputs, scenario=disp_scenario)
 
     # TODO: add elif for when year is in the database, so no need to interpolate
     # disp_outyear = disp_inp.climoutputs_set.get(year=year)
 
-    disp_out = {}
-    if year == '' or year is None:
-        disp_outyear['year'] = ''
-        disp_yearbef = (disp_inp.climoutputs_set.get(year=defaultyear)).get_fields()
-        for i,(name, value) in enumerate(disp_yearbef):
-            if name != 'id' and name != 'scenario':
-                disp_outyear[name] = ''
-                disp_out[climvar_names_bot[name]] = ''
-    else:
-        # SQL: select [atts of climoutputs] from disp_inp natural_join climoutputs
-        disp_all = disp_inp.climoutputs_set.all()
+    # disp_out = {}
+    # if year == '' or year is None:
+    #     disp_outyear['year'] = ''
+    #     disp_yearbef = (disp_inp.climoutputs_set.get(year=defaultyear)).get_fields()
+    #     for i,(name, value) in enumerate(disp_yearbef):
+    #         if name != 'id' and name != 'scenario':
+    #             disp_outyear[name] = ''
+    #             disp_out[climvar_names_bot[name]] = ''
+    # else:
+    #     # SQL: select [atts of climoutputs] from disp_inp natural_join climoutputs
+    #     disp_all = disp_inp.climoutputs_set.all()
 
-        year = float(year)
-        yearmin = disp_all.all().aggregate(Min('year'))['year__min']
-        yearmax = disp_all.all().aggregate(Max('year'))['year__max']
-        if year < yearmin:
-            year = yearmin
-        elif year > yearmax:
-            year = yearmax
+    #     year = float(year)
+    #     yearmin = disp_all.all().aggregate(Min('year'))['year__min']
+    #     yearmax = disp_all.all().aggregate(Max('year'))['year__max']
+    #     if year < yearmin:
+    #         year = yearmin
+    #     elif year > yearmax:
+    #         year = yearmax
 
-        # Get the indices to the year before and after the years of interest
-        # Product.objects.all().aggregate(Min('price'))
-        iyear = [i for i,disp_year in enumerate(disp_all) if disp_year.year>=int(year)][0]
-        if iyear <= 0:
-            iyear = 1
+    #     # Get the indices to the year before and after the years of interest
+    #     # Product.objects.all().aggregate(Min('price'))
+    #     iyear = [i for i,disp_year in enumerate(disp_all) if disp_year.year>=int(year)][0]
+    #     if iyear <= 0:
+    #         iyear = 1
 
-        # Interpolate everything to the selected year
-        yearbef = disp_all[iyear-1].year
-        yearaft = disp_all[iyear].year
-        wtaft = (year-yearbef)/(yearaft-yearbef)
-        wtbef = (yearaft-year)/(yearaft-yearbef)
-        disp_yearbef = (disp_inp.climoutputs_set.get(year=yearbef)).get_fields()
-        disp_yearaft = (disp_inp.climoutputs_set.get(year=yearaft)).get_fields()
-        for i,(name, value) in enumerate(disp_yearbef):
-            if name != 'id' and name != 'scenario':
-                res = round(wtbef * float(value) + wtaft * float(disp_yearaft[i][1]), 2)
-                disp_outyear[name] = res
-                disp_out[climvar_names_bot[name]] = str(res)
+    #     # Interpolate everything to the selected year
+    #     yearbef = disp_all[iyear-1].year
+    #     yearaft = disp_all[iyear].year
+    #     wtaft = (year-yearbef)/(yearaft-yearbef)
+    #     wtbef = (yearaft-year)/(yearaft-yearbef)
+    #     disp_yearbef = (disp_inp.climoutputs_set.get(year=yearbef)).get_fields()
+    #     disp_yearaft = (disp_inp.climoutputs_set.get(year=yearaft)).get_fields()
+    #     for i,(name, value) in enumerate(disp_yearbef):
+    #         if name != 'id' and name != 'scenario':
+    #             res = round(wtbef * float(value) + wtaft * float(disp_yearaft[i][1]), 2)
+    #             disp_outyear[name] = res
+    #             disp_out[climvar_names_bot[name]] = str(res)
 
+    climateinputs = []
+    disp_out = []
+    
     context = {
         'climateinputs': climateinputs,
         'years': years,
@@ -151,4 +154,4 @@ def index(request):
         'climvar_names': climvar_names,
         'disp_out': disp_out,
     }
-    return render(request, 'benchly/index.html', context)
+    return render(request, 'cambio/index.html', context)
