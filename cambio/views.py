@@ -14,33 +14,117 @@ from plotly.graph_objs import Scatter
 import numpy as np
 from django.db.models import Min, Max
 
+from cambio.utils.cambio import cambio
 
 def index(request):
     # Values that must be in the database
     defaultyear = 2100
 
-    # get variables from GET params (leave this alone Ben)
-    climvar = request.GET.get('climvar', 'f_ha') # the second value is the default I think
-    disp_scenario = request.GET.get('disp_scenario', 1)
-    year = request.GET.get('disp_year', None)
+    # Need to remove this
+    climvar = request.GET.get('climvar', 'f_ha')
+    disp_scenario = "3"
+    year = 2022
+    
+    # Default values
+    inputs = {
+        "start_year": 1750,  #<!-- start_year"><br> -->
+        "stop_year": 2200,  #stop_year"><br> -->
+        "dtime": 1.,  #dtime"><br> time resolution (years) -->
+        "inv_time_constant": 0.025,  #inv_time_constant"><br> -->
+        "transition_year": 2040.,  #transition_year"><br> # year to start decreasing CO2 -->
+        "transition_duration": 20.,  #transition_duration"><br> years over which to decrease co2  -->
+        "long_term_emissions": 2.,  #long_term_emissions"><br> # ongoing carbon emissions after decarbonization  -->
+        "albedo_with_no_constraint": "False",  #albedo_with_no_constraint"><br> -->
+        "albedo_feedback": "False",  #albedo_feedback"><br> -->
+        "temp_anomaly_feedback": "False",  #temp_anomaly_feedback"><br> -->
+        "stochastic_C_atm": "False",  #stochastic_C_atm"><br> -->
+        "stochastic_c_atm_std_dev": 0.1,  #stochastic_c_atm_std_dev"> <br> -->
+        "temp_units": "F",  #temp_units"><br> # F, C, or K -->
+        "c_units": "GtC",  #c_units"><br> GtC, GtCO2, atm  -->
+        "flux_type": "/year",  #flux_type"><br> # total, per year-->
+        "plot_flux_diffs": "True",  #plot_flux_diffs"><br> -->
+    }
+
+
+    # Get variables from GET params
+    varnames = {
+        'start_year': 'float',
+        'stop_year': 'float',
+        'dtime': 'float',
+        'inv_time_constant': 'float',
+        'transition_year': 'float',
+        'transition_duration': 'float',
+        'long_term_emissions': 'float',
+        'albedo_with_no_constraint': 'bool', #albedo_with_no_constraint"><br> -->
+        'albedo_feedback': 'bool', #albedo_feedback"><br> -->
+        'temp_anomaly_feedback': 'bool', #temp_anomaly_feedback"><br> -->
+        'stochastic_C_atm': 'bool', #stochastic_C_atm"><br> -->
+        'stochastic_c_atm_std_dev': 'float', #stochastic_c_atm_std_dev"> <br> -->
+        'temp_units':'str', #temp_units"><br> # F, C, or K -->
+        'c_units':'str', #c_units"><br> GtC, GtCO2, atm  -->
+        'flux_type':'str', #flux_type"><br> # total, per year-->
+        'plot_flux_diffs':'str', #plot_flux_diffs"><br> -->
+    }
+    for varname,vartype in varnames.items():
+        try:
+            valstr = request.GET.get(varname, 'nan')
+            if valstr != '':
+                if vartype == 'float':
+                    inputs[varname] = float(valstr)
+                elif vartype == 'bool':
+                    inputs[varname] = bool(valstr)
+        except:
+            print(varname)
+
+    # Run the model
+    climate, climate_params = cambio(
+    inputs['start_year'],
+    inputs['stop_year'],
+    inputs['dtime'],
+    inputs['inv_time_constant'],
+    inputs['transition_year'],
+    inputs['transition_duration'],
+    inputs['long_term_emissions'],
+    inputs['stochastic_c_atm_std_dev'],
+    inputs['albedo_with_no_constraint'],
+    inputs['albedo_feedback'],
+    inputs['stochastic_C_atm'],
+    inputs['temp_anomaly_feedback'],
+    inputs['temp_units'],
+    inputs['flux_type'],
+    inputs['plot_flux_diffs'],
+    )
+
+
 
     # TODO: The possible number of scenarios is hard-wired here. Fix this.
-    scenarios = [i for i in range(1,17) if request.GET.get(f'scenario{i}', None) is not None]
+    # scenarios = [i for i in range(1,17) if request.GET.get(f'scenario{i}', None) is not None]
+    
 
     # query database
-    climvarvals = []
+    scenarios = [0]
+    climvar1 = "F_ha"
+    climvar2 = "T_anomaly"
+    climvar3 = "pH"
+    climvar4 = "albedo"
+    climvarvals1 = []
+    climvarvals2 = []
+    climvarvals3 = []
+    climvarvals4 = []
     years = []
 
-    # SQL: select * from ClimInputs
-    # climateinputs = ClimInputs.objects.all()
+    # Make plots
     for scenario in scenarios:
-        # Django ORM for SQL command: select scenario,year from ClimateOutputs where scenario=scenario
-        # coutp = (ClimOutputs.objects.only('scenario', 'year', climvar)).filter(scenario=scenario)
         # Get x and y values for timeseries plot
         # years.append([x.year for x in coutp])
-        #climvarvals.append([getattr(x, climvar) for x in coutp])
-        years = np.linspace(1700, 2100)
-        climvarvals = [years]
+        # climvarvals.append([getattr(x, climvar) for x in coutp])
+        years.append(climate["year"])
+        climvarvals1.append(climate[climvar1])
+        climvarvals2.append(climate[climvar2])
+        climvarvals3.append(climate[climvar3])
+        climvarvals4.append(climate[climvar4])
+
+
 
     colors = [
         'red',
@@ -65,7 +149,22 @@ def index(request):
     if len(scenarios)==0:
         plot_div=''
     else:
-        plot_div = plot({'data':
+        climvarvals = climvarvals1
+        climvar = climvar1
+        plot_div1 = plot({'data':
+            [
+                Scatter(x=xvals, y=yvals,
+                        mode='lines', name=f'Scenario {scenarios[i]}',
+                        opacity=0.8, marker_color=colors[i%len(colors)]) \
+                for i,(xvals,yvals) in enumerate(zip(years,climvarvals))
+            ],
+                    'layout': {'xaxis': {'title': 'year'},
+                    'yaxis': {'title': climvar}}},
+            output_type='div', include_plotlyjs=False)
+
+        climvarvals = climvarvals2
+        climvar = climvar2
+        plot_div2 = plot({'data':
                 [
                     Scatter(x=xvals, y=yvals,
                             mode='lines', name=f'Scenario {scenarios[i]}',
@@ -75,6 +174,33 @@ def index(request):
                         'layout': {'xaxis': {'title': 'year'},
                         'yaxis': {'title': climvar}}},
                 output_type='div', include_plotlyjs=False)
+
+        climvarvals = climvarvals3
+        climvar = climvar3
+        plot_div3 = plot({'data':
+                [
+                    Scatter(x=xvals, y=yvals,
+                            mode='lines', name=f'Scenario {scenarios[i]}',
+                            opacity=0.8, marker_color=colors[i%len(colors)]) \
+                    for i,(xvals,yvals) in enumerate(zip(years,climvarvals))
+                ],
+                        'layout': {'xaxis': {'title': 'year'},
+                        'yaxis': {'title': climvar}}},
+                output_type='div', include_plotlyjs=False)
+
+        climvarvals = climvarvals4
+        climvar = climvar4
+        plot_div4 = plot({'data':
+                [
+                    Scatter(x=xvals, y=yvals,
+                            mode='lines', name=f'Scenario {scenarios[i]}',
+                            opacity=0.8, marker_color=colors[i%len(colors)]) \
+                    for i,(xvals,yvals) in enumerate(zip(years,climvarvals))
+                ],
+                        'layout': {'xaxis': {'title': 'year'},
+                        'yaxis': {'title': climvar}}},
+                output_type='div', include_plotlyjs=False)
+
 
     # Names for displaying climate variables
     climvar_names = {
@@ -150,7 +276,10 @@ def index(request):
         'climvar': climvar,
         'disp_scenario': disp_scenario,
         'year': year,
-        'plot_div': plot_div,
+        'plot_div1': plot_div1,
+        'plot_div2': plot_div2,
+        'plot_div3': plot_div3,
+        'plot_div4': plot_div4,
         'climvar_names': climvar_names,
         'disp_out': disp_out,
     }

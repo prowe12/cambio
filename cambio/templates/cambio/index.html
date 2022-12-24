@@ -23,56 +23,91 @@
   <form action="/cambio/{{name}}" method="GET">
     <div class="row">
       <div class="column1">
-        <h3>Climate Scenario</h3>
-        <p>Scenario, start year, decarb period, final emissions</p>
+        <b>Climate Scenario</b><br>
+        <!--<div id="years" class="climate_variables">-->
+            <label for="start_year">start year</label>
+            {% if 'disp_year' in request.GET and request.GET.disp_year != ''%}
+                <input type="text" placeholder="1800" id="start_year" name="start_year" value="{{request.GET.disp_year}}">
+            {% else %}
+                <input type="text" placeholder="Enter Year" id="disp_year" name="disp_year">
+            {% endif %}
+            <br>
+            <label for="start_year">start year</label>
+            <input type="text" placeholder="1750" id="start_year" name="start_year"><br>
+            <label for="stop_year">ending year</label>
+            <input type="text" placeholder="2200" id="stop_year" name="stop_year"><br>
+            <label for="dtime">Time resolution</label>
+            <input type="text" placeholder="1.0" id="dtime" name="dtime"><br> <!--time resolution (years) -->
+            <label for="inv_time_constant">Inverse time constant</label>
+            <input type="text" placeholder="0.025" id="inv_time_constant" name="inv_time_constant"><br>
+            <label for="transition_year">Year of peak emissions</label>
+            <input type="text" placeholder="2040" id="transition_year" name="transition_year"><br> <!-- # year to start decreasing CO2 -->
+            <label for="transition_duration">Time to transition</label>
+            <input type="text" placeholder="20" id="transition_duration" name="transition_duration"><br> <!--years over which to decrease co2  -->
+            <label for="long_term_emissions">Long term emissions</label>
+            <input type="text" placeholder="2" id="long_term_emissions" name="long_term_emissions"><br> <!--# ongoing carbon emissions after decarbonization  -->
+            <b>Feedbacks</b><br>
+            <label for="albedo_with_no_constraint">Contraint on albedo</label>
+            <input type="text" placeholder="False" id="albedo_with_no_constraint" name="albedo_with_no_constraint"><br> <!-- -->
+            <label for="albedo_feedback">Albedo feedback</label>
+            <input type="text" placeholder="False" id="albedo_feedback" name="albedo_feedback"><br> <!-- -->
+            <label for="temp_anomaly_feedback">Temperature feedback</label>
+            <input type="text" placeholder="False" id="temp_anomaly_feedback" name="temp_anomaly_feedback"><br> <!-- -->
+            <b>Noise</b><br>
+            <label for="stochastic_C_atm">Turn on noise</label>
+            <input type="text" placeholder="False" id="stochastic_C_atm" name="stochastic_C_atm"><br> <!-- -->
+            <label for="stochastic_c_atm_std_dev">Noise level</label>
+            <input type="text" placeholder="0.1 " id="stochastic_c_atm_std_dev" name="stochastic_c_atm_std_dev"> <br><!-- -->
+            <b>Units</b><br>
+            <label for="temp_units">Temperature Units</label>
+            <input type="text" placeholder="F" id="temp_units" name="temp_units"><br> <!--# F, C, or K -->
+            <label for="c_units">Carbon units</label>
+            <input type="text" placeholder="GtC" id="c_units" name="c_units"><br> <!--GtC, GtCO2, atm  -->
+            <label for="flux_type">Flux type</label>
+            <input type="text" placeholder="/year" id="flux_type" name="flux_type"><br> <!-- # total, per year-->
+            <label for="plot_flux_diffs">Plot flux difference</label>
+            <input type="text" placeholder="True" id="plot_flux_diffs" name="plot_flux_diffs"><br> <!-- -->
+            <button type="submit" value="Submit" formaction="/cambio/{{name}}#scenario-buttons-display">Submit</button>
+
+
+        <!--</div>-->
 
         <!--Use the form to choose the desired scenarios for the selected climate variable
             Loop over climate variables first, then create a form for each that allows the user
             to select a set of scenarios. id is, e.g. scenarioatmos_co2-3
             url is, e.g. http://127.0.0.1:8000/cambio/ocean_co2?scenario3=on&scenario4=on -->
         <div id="scenario-buttons-top">
-          {% if climateinputs %}
-          {% for inp in climateinputs %}
-          {% if "scenario"|addstr:inp.scenario in request.GET %}
-          <input class="scenario-buttons" type="checkbox" id="scenario{{name}}-{{inp.scenario}}"
-            name="scenario{{inp.scenario}}" value="on" checked>
-          {% else %}
-          <input type="checkbox" id="scenario{{name}}-{{inp.scenario}}" name="scenario{{inp.scenario}}" value="on">
-          {% endif %}
-          <label for="scenario{{name}}-{{inp.scenario}}">
-            Scenario{{inp.scenario}}: {{inp.start_year}}, {{inp.decarb_period}}, {{inp.final_emiss}}</label><br>
-          {% endfor %}
-
-          <input type="submit" value="Submit" class="top_submit_button">
-          {% else %}
-            <p>No scenarios are available.</p>
-          {% endif %}
-          <br><br><br><br><br><br><br><br><br><br><br>
+            {% if climateinputs %}
+                {% for inp in climateinputs %}
+                    {% if "scenario"|addstr:inp.scenario in request.GET %}
+                        <input class="scenario-buttons" type="checkbox" id="scenario{{name}}-{{inp.scenario}}"
+                        name="scenario{{inp.scenario}}" value="on" checked>
+                    {% else %}
+                        <input type="checkbox" id="scenario{{name}}-{{inp.scenario}}" name="scenario{{inp.scenario}}" value="on">
+                    {% endif %}
+                    <label for="scenario{{name}}-{{inp.scenario}}">
+                    Scenario{{inp.scenario}}: {{inp.start_year}}, {{inp.decarb_period}}, {{inp.final_emiss}}</label><br>
+                {% endfor %}
+                <input type="submit" value="Submit" class="top_submit_button">
+            {% else %}
+                <p>No scenarios are available.</p>
+            {% endif %}
+            <br><br><br><br><br><br><br><br><br><br><br>
         </div>
       </div>
 
-      <!--Add the climate variable buttons, where only one can be selected at a time
-        The names and labels were packed into the dictionary climvar_names, so use that -->
+      <!--Text above the top of the plot, if any -->
       <div id="climate-variables-top" class="climate_variables">
-        <h3>Climate Variables</h3>
-        {% for name, name_label in climvar_names.items %}
-          {% if name != 'id' and name != 'scenario' and name != 'year' %}
-            <!--The following will give us climvar={{name}}, e.g. climvar="atmos_co2" in GET params-->
-            {% if 'climvar' in request.GET and request.GET.climvar == name %}
-              <input type="radio" id="climvarbutton-{{name}}" name="climvar" value="{{name}}" checked>
-            {% else %}
-              <input type="radio" id="climvarbutton-{{name}}" name="climvar" value="{{name}}">
-            {% endif %}
-            <label for="climvarbutton-{{name}}">{{name_label}}</label>
-          {% endif %}
-        {% endfor %}
       </div>
 
       <div class="graph_area" id="graph_area">
         <!-- Time series figure -->
         <!-- Django uses double brackets to render Python variables passed by the views to the templates. -->
         {% autoescape off %}
-        {{ plot_div }}
+        {{ plot_div1 }}
+        {{ plot_div2 }}
+        {{ plot_div3 }}
+        {{ plot_div4 }}
         {% endautoescape %}
       </div>
 
@@ -100,15 +135,6 @@
 
       </div>
 
-      <div id="years" class="climate_variables">
-        <h3>Year</h3>
-        {% if 'disp_year' in request.GET and request.GET.disp_year != ''%}
-        <input type="text" placeholder="Enter Year" id="disp_year" name="disp_year" value="{{request.GET.disp_year}}">
-        {% else %}
-        <input type="text" placeholder="Enter Year" id="disp_year" name="disp_year">
-        {% endif %}
-        <button type="submit" value="Submit" formaction="/cambio/{{name}}#scenario-buttons-display">Submit</button>
-      </div>
 
     </div>
 

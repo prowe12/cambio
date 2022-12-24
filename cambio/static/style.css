@@ -42,6 +42,12 @@ body {
     border-bottom: solid black 5px
 }
 
+/* Size of text boxes */
+input[type="text"] {
+    width: 60px;
+}
+
+
 /* Create three equal columns that float next to each other */
 .column1 {
     float: left;
