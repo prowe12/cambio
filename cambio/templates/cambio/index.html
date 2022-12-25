@@ -25,6 +25,13 @@
       <div class="column1">
         <b>Climate Scenario</b><br>
         <!--<div id="years" class="climate_variables">-->
+            {% for scenario_input in scenario_inputs %}
+            <details>
+                <summary>See More</summary>
+                This text will be hidden if your browser supports it.
+            </details>
+            {% endfor %}
+      
             <label for="start_year">start year</label>
             {% if 'disp_year' in request.GET and request.GET.disp_year != ''%}
                 <input type="text" placeholder="1800" id="start_year" name="start_year" value="{{request.GET.disp_year}}">
@@ -96,6 +103,7 @@
         </div>
       </div>
 
+            
       <!--Text above the top of the plot, if any -->
       <div id="climate-variables-top" class="climate_variables">
       </div>
