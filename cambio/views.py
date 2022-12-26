@@ -5,16 +5,69 @@ By Penny Rowe and Daniel Neshyba
 Based on Benchly, by Ben Gamble, Charlie Dahl, and Penny Rowe
 """
 
-from django.shortcuts import get_object_or_404, render
-from django.http import HttpResponse, HttpResponseRedirect
-from django.template import loader
-from django.urls import reverse
+import json
+
+from typing import Any
+from django.shortcuts import render
 from plotly.offline import plot
 from plotly.graph_objs import Scatter
-import numpy as np
-from django.db.models import Min, Max
 
 from cambio.utils.cambio import cambio
+
+def parse_cambio_inputs(input_dict: dict[str, Any]) -> dict[str, Any]:
+    
+    # Default values
+    inputs = {
+        "start_year": 1750.0,  #<!-- start_year"><br> -->
+        "stop_year": 2200.0,  #stop_year"><br> -->
+        "dtime": 1.,  #dtime"><br> time resolution (years) -->
+        "inv_time_constant": 0.025,  #inv_time_constant"><br> -->
+        "transition_year": 2040.0,  #transition_year"><br> # year to start decreasing CO2 -->
+        "transition_duration": 20.0,  #transition_duration"><br> years over which to decrease co2  -->
+        "long_term_emissions": 2.0,  #long_term_emissions"><br> # ongoing carbon emissions after decarbonization  -->
+        "albedo_with_no_constraint": False,  #albedo_with_no_constraint"><br> -->
+        "albedo_feedback": False,  #albedo_feedback"><br> -->
+        "temp_anomaly_feedback": False,  #temp_anomaly_feedback"><br> -->
+        "stochastic_C_atm": False,  #stochastic_C_atm"><br> -->
+        "stochastic_c_atm_std_dev": 0.1,  #stochastic_c_atm_std_dev"> <br> -->
+        "temp_units": "F",  #temp_units"><br> # F, C, or K -->
+        "c_units": "GtC",  #c_units"><br> GtC, GtCO2, atm  -->
+        "flux_type": "/year",  #flux_type"><br> # total, per year-->
+        "plot_flux_diffs": True,  #plot_flux_diffs"><br> -->
+    }
+    varnames = {
+        'start_year': float,
+        'stop_year': float,
+        'dtime': float,
+        'inv_time_constant': float,
+        'transition_year': float,
+        'transition_duration': float,
+        'long_term_emissions': float,
+        'albedo_with_no_constraint': bool,
+        'albedo_feedback': bool,
+        'temp_anomaly_feedback': bool,
+        'stochastic_C_atm': bool,
+        'stochastic_c_atm_std_dev': float,
+        'temp_units':str,
+        'c_units':str,
+        'flux_type':str,
+        'plot_flux_diffs':bool,
+    }
+
+    for varname,vartype in varnames.items():
+        if varname not in input_dict:
+            continue
+
+        valstr = input_dict[varname]
+        if valstr == '':
+            continue
+
+        # TODO: this might make us vulnerable to injection code
+        try:
+            inputs[varname] = vartype(valstr)
+        except ValueError:
+            print(f"Error converting value {varname}={valstr} to {vartype}")
+    return inputs
 
 def index(request):
     # Values that must be in the database
@@ -23,104 +76,60 @@ def index(request):
     # Need to remove this
     climvar = request.GET.get('climvar', 'f_ha')
     disp_scenario = "3"
-    year = 2022
-    
-    # Default values
-    inputs = {
-        "start_year": 1750,  #<!-- start_year"><br> -->
-        "stop_year": 2200,  #stop_year"><br> -->
-        "dtime": 1.,  #dtime"><br> time resolution (years) -->
-        "inv_time_constant": 0.025,  #inv_time_constant"><br> -->
-        "transition_year": 2040.,  #transition_year"><br> # year to start decreasing CO2 -->
-        "transition_duration": 20.,  #transition_duration"><br> years over which to decrease co2  -->
-        "long_term_emissions": 2.,  #long_term_emissions"><br> # ongoing carbon emissions after decarbonization  -->
-        "albedo_with_no_constraint": "False",  #albedo_with_no_constraint"><br> -->
-        "albedo_feedback": "False",  #albedo_feedback"><br> -->
-        "temp_anomaly_feedback": "False",  #temp_anomaly_feedback"><br> -->
-        "stochastic_C_atm": "False",  #stochastic_C_atm"><br> -->
-        "stochastic_c_atm_std_dev": 0.1,  #stochastic_c_atm_std_dev"> <br> -->
-        "temp_units": "F",  #temp_units"><br> # F, C, or K -->
-        "c_units": "GtC",  #c_units"><br> GtC, GtCO2, atm  -->
-        "flux_type": "/year",  #flux_type"><br> # total, per year-->
-        "plot_flux_diffs": "True",  #plot_flux_diffs"><br> -->
-    }
+    years = 2022
 
 
-    # Get variables from GET params
-    varnames = {
-        'start_year': 'float',
-        'stop_year': 'float',
-        'dtime': 'float',
-        'inv_time_constant': 'float',
-        'transition_year': 'float',
-        'transition_duration': 'float',
-        'long_term_emissions': 'float',
-        'albedo_with_no_constraint': 'bool', #albedo_with_no_constraint"><br> -->
-        'albedo_feedback': 'bool', #albedo_feedback"><br> -->
-        'temp_anomaly_feedback': 'bool', #temp_anomaly_feedback"><br> -->
-        'stochastic_C_atm': 'bool', #stochastic_C_atm"><br> -->
-        'stochastic_c_atm_std_dev': 'float', #stochastic_c_atm_std_dev"> <br> -->
-        'temp_units':'str', #temp_units"><br> # F, C, or K -->
-        'c_units':'str', #c_units"><br> GtC, GtCO2, atm  -->
-        'flux_type':'str', #flux_type"><br> # total, per year-->
-        'plot_flux_diffs':'str', #plot_flux_diffs"><br> -->
-    }
-    for varname,vartype in varnames.items():
-        try:
-            valstr = request.GET.get(varname, 'nan')
-            if valstr != '':
-                if vartype == 'float':
-                    inputs[varname] = float(valstr)
-                elif vartype == 'bool':
-                    inputs[varname] = bool(valstr)
-        except:
-            print(varname)
+
+    # Get cambio inputs from GET params
+    inputs = parse_cambio_inputs(request.GET)
+
+    # Get cambio inputs from cookies
+    cookie_scenarios = [json.loads(value) for input, value in request.COOKIES.items()]
+    cookie_scenarios = list(filter(lambda x: isinstance(x, dict), cookie_scenarios))
+    scenario_inputs = [parse_cambio_inputs(scenario) for scenario in cookie_scenarios]
+
+    # if the new scenario is different from all old scenarios, add it
+    new_hash = str(hash(json.dumps(inputs)))
+    if new_hash not in request.COOKIES.keys():
+        scenario_inputs.append(inputs)
 
     # Run the model
-    climate, climate_params = cambio(
-    inputs['start_year'],
-    inputs['stop_year'],
-    inputs['dtime'],
-    inputs['inv_time_constant'],
-    inputs['transition_year'],
-    inputs['transition_duration'],
-    inputs['long_term_emissions'],
-    inputs['stochastic_c_atm_std_dev'],
-    inputs['albedo_with_no_constraint'],
-    inputs['albedo_feedback'],
-    inputs['stochastic_C_atm'],
-    inputs['temp_anomaly_feedback'],
-    inputs['temp_units'],
-    inputs['flux_type'],
-    inputs['plot_flux_diffs'],
-    )
+    scenarios = []
+    for scenario_input in scenario_inputs:
+        climate, _ = cambio(
+            scenario_input['start_year'],
+            scenario_input['stop_year'],
+            scenario_input['dtime'],
+            scenario_input['inv_time_constant'],
+            scenario_input['transition_year'],
+            scenario_input['transition_duration'],
+            scenario_input['long_term_emissions'],
+            scenario_input['stochastic_c_atm_std_dev'],
+            scenario_input['albedo_with_no_constraint'],
+            scenario_input['albedo_feedback'],
+            scenario_input['stochastic_C_atm'],
+            scenario_input['temp_anomaly_feedback'],
+            scenario_input['temp_units'],
+            scenario_input['flux_type'],
+            scenario_input['plot_flux_diffs'],
+        )
+        scenarios.append(climate)
 
-
-
-    # TODO: The possible number of scenarios is hard-wired here. Fix this.
-    # scenarios = [i for i in range(1,17) if request.GET.get(f'scenario{i}', None) is not None]
-    
-
-    # query database
-    scenarios = [0]
     climvarval_selected_names = ["F_ha", "T_anomaly", "pH","albedo"]
     climvarvals = [[] for i in range(len(climvarval_selected_names))]
 
-
-    # get the new scenario
-    for i,name in enumerate(climvarval_selected_names):
-        climvarvals[i].append(climate[name])
-
-
+    # get all scenarios
     years = []
-    years.append(climate["year"])
-
+    for scenario in scenarios:
+        for i,name in enumerate(climvarval_selected_names):
+            climvarvals[i].append(scenario[name])
+        years.append(scenario["year"])
+    print("climvarvals is:", climvarvals)
 
 
     colors = [
         'red',
         'orange',
-        'yellow',
         'green',
         'cyan',
         'blue',
@@ -142,17 +151,17 @@ def index(request):
     else:
         plot_divs = []
         for climvar_name, climvarval in zip(climvarval_selected_names, climvarvals):
+            print(f'plotting {climvar_name}, there should be {len(climvarval)} simulations')
             plot_divs.append(plot({'data':
             [
                 Scatter(x=xvals, y=yvals,
-                        mode='lines', name=f'Scenario {scenarios[i]}',
+                        mode='lines', name=f'Scenario {i}',
                         opacity=0.8, marker_color=colors[i%len(colors)]) \
                 for i,(xvals,yvals) in enumerate(zip(years,climvarval))
             ],
                     'layout': {'xaxis': {'title': 'year'},
                     'yaxis': {'title': climvar_name}}},
             output_type='div', include_plotlyjs=False))
-        print("plot divs len:", len(plot_divs))
 
     # Names for displaying climate variables
     climvar_names = {
@@ -169,10 +178,10 @@ def index(request):
                      'tot_ha': 'total CO2 from humans (GTC)',
                     }
 
-    climvar_names_bot = dict(climvar_names) # {key:value for key,value in climvar_names}
-    climvar_names_bot['year'] = 'year'
+    #climvar_names_bot = dict(climvar_names) # {key:value for key,value in climvar_names}
+    #climvar_names_bot['year'] = 'year'
 
-    disp_outyear = {}
+    #disp_outyear = {}
     # SQL: disp_inp <-- select * from ClimInputs where scenario=disp_scenario
     #disp_inp = get_object_or_404(ClimInputs, scenario=disp_scenario)
 
@@ -220,16 +229,25 @@ def index(request):
 
     climateinputs = []
     disp_out = []
-    
+
     context = {
         'climateinputs': climateinputs,
         'years': years,
         'scenario': scenarios,
         'climvar': climvar,
         'disp_scenario': disp_scenario,
-        'year': year,
+        'year': years,
         'plot_divs': plot_divs,
         'climvar_names': climvar_names,
         'disp_out': disp_out,
     }
-    return render(request, 'cambio/index.html', context)
+    response = render(request, 'cambio/index.html', context)
+
+    # save latest run in cookies
+    scenario = json.dumps(scenario_inputs[-1])
+    scenario_hash = str(hash(scenario))
+    # don't add the new scenario to cookies if it already exists
+    if scenario_hash not in request.COOKIES.keys():
+        response.set_cookie(scenario_hash, scenario)
+
+    return response
