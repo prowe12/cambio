@@ -103,26 +103,17 @@ def index(request):
 
     # query database
     scenarios = [0]
-    climvar1 = "F_ha"
-    climvar2 = "T_anomaly"
-    climvar3 = "pH"
-    climvar4 = "albedo"
-    climvarvals1 = []
-    climvarvals2 = []
-    climvarvals3 = []
-    climvarvals4 = []
-    years = []
+    climvarval_selected_names = ["F_ha", "T_anomaly", "pH","albedo"]
+    climvarvals = [[] for i in range(len(climvarval_selected_names))]
 
-    # Make plots
-    for scenario in scenarios:
-        # Get x and y values for timeseries plot
-        # years.append([x.year for x in coutp])
-        # climvarvals.append([getattr(x, climvar) for x in coutp])
-        years.append(climate["year"])
-        climvarvals1.append(climate[climvar1])
-        climvarvals2.append(climate[climvar2])
-        climvarvals3.append(climate[climvar3])
-        climvarvals4.append(climate[climvar4])
+
+    # get the new scenario
+    for i,name in enumerate(climvarval_selected_names):
+        climvarvals[i].append(climate[name])
+
+
+    years = []
+    years.append(climate["year"])
 
 
 
@@ -149,58 +140,19 @@ def index(request):
     if len(scenarios)==0:
         plot_div=''
     else:
-        climvarvals = climvarvals1
-        climvar = climvar1
-        plot_div1 = plot({'data':
+        plot_divs = []
+        for climvar_name, climvarval in zip(climvarval_selected_names, climvarvals):
+            plot_divs.append(plot({'data':
             [
                 Scatter(x=xvals, y=yvals,
                         mode='lines', name=f'Scenario {scenarios[i]}',
                         opacity=0.8, marker_color=colors[i%len(colors)]) \
-                for i,(xvals,yvals) in enumerate(zip(years,climvarvals))
+                for i,(xvals,yvals) in enumerate(zip(years,climvarval))
             ],
                     'layout': {'xaxis': {'title': 'year'},
-                    'yaxis': {'title': climvar}}},
-            output_type='div', include_plotlyjs=False)
-
-        climvarvals = climvarvals2
-        climvar = climvar2
-        plot_div2 = plot({'data':
-                [
-                    Scatter(x=xvals, y=yvals,
-                            mode='lines', name=f'Scenario {scenarios[i]}',
-                            opacity=0.8, marker_color=colors[i%len(colors)]) \
-                    for i,(xvals,yvals) in enumerate(zip(years,climvarvals))
-                ],
-                        'layout': {'xaxis': {'title': 'year'},
-                        'yaxis': {'title': climvar}}},
-                output_type='div', include_plotlyjs=False)
-
-        climvarvals = climvarvals3
-        climvar = climvar3
-        plot_div3 = plot({'data':
-                [
-                    Scatter(x=xvals, y=yvals,
-                            mode='lines', name=f'Scenario {scenarios[i]}',
-                            opacity=0.8, marker_color=colors[i%len(colors)]) \
-                    for i,(xvals,yvals) in enumerate(zip(years,climvarvals))
-                ],
-                        'layout': {'xaxis': {'title': 'year'},
-                        'yaxis': {'title': climvar}}},
-                output_type='div', include_plotlyjs=False)
-
-        climvarvals = climvarvals4
-        climvar = climvar4
-        plot_div4 = plot({'data':
-                [
-                    Scatter(x=xvals, y=yvals,
-                            mode='lines', name=f'Scenario {scenarios[i]}',
-                            opacity=0.8, marker_color=colors[i%len(colors)]) \
-                    for i,(xvals,yvals) in enumerate(zip(years,climvarvals))
-                ],
-                        'layout': {'xaxis': {'title': 'year'},
-                        'yaxis': {'title': climvar}}},
-                output_type='div', include_plotlyjs=False)
-
+                    'yaxis': {'title': climvar_name}}},
+            output_type='div', include_plotlyjs=False))
+        print("plot divs len:", len(plot_divs))
 
     # Names for displaying climate variables
     climvar_names = {
@@ -276,10 +228,7 @@ def index(request):
         'climvar': climvar,
         'disp_scenario': disp_scenario,
         'year': year,
-        'plot_div1': plot_div1,
-        'plot_div2': plot_div2,
-        'plot_div3': plot_div3,
-        'plot_div4': plot_div4,
+        'plot_divs': plot_divs,
         'climvar_names': climvar_names,
         'disp_out': disp_out,
     }

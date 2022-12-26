@@ -112,10 +112,9 @@
         <!-- Time series figure -->
         <!-- Django uses double brackets to render Python variables passed by the views to the templates. -->
         {% autoescape off %}
-        {{ plot_div1 }}
-        {{ plot_div2 }}
-        {{ plot_div3 }}
-        {{ plot_div4 }}
+        {% for plot_div in plot_divs %}
+            {{ plot_div }}
+        {% endfor %}
         {% endautoescape %}
       </div>
 
