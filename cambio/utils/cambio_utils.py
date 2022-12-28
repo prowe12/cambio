@@ -5,7 +5,7 @@ Created on Wed Dec 21 15:49:24 2022
 
 @author: nesh
 
-By Steven Neshyba
+By Steven Neshyba and Penny Rowe
 Refactored by Penny Rowe and Daniel Neshyba-Rowe
 """
 from copy import deepcopy as makeacopy
@@ -78,7 +78,25 @@ def Diagnose_actual_temperature(T_anomaly: float) -> float:
     return T_C
 
 
-def Diagnose_degreesF(T_C: float) -> float:
+def celsius_to_f(temp: float) -> float:
+    """
+    Convert temperature from C to F
+
+    @param temp  temperature in C
+    @returns  temperature in F
+    """
+    return temp * 9 / 5 + 32
+
+def celsius_to_kelvin(temp: float) -> float:
+    """
+    Convert temperature from C to K
+
+    @param temp  temperature in K
+    @returns  temperature in K
+    """
+    return temp + 273.15
+
+def diagnose_degrees_f(T_C: float) -> float:
     """
     Convert temperature from C to F
 

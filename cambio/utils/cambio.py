@@ -75,9 +75,8 @@ import numpy.typing as npt
 from cambio.utils.cambio_utils import make_emissions_scenario_lte, is_same
 from cambio.utils.preindustrial_inputs import *
 from cambio.utils.climate_params import ClimateParams
-from cambio.utils.cambio_utils import Diagnose_actual_temperature
+from cambio.utils.cambio_utils import Diagnose_actual_temperature, diagnose_degrees_f
 
-#    Diagnose_degreesF,
 
 
 def cambio(
@@ -93,9 +92,6 @@ def cambio(
     albedo_feedback: bool,
     stochastic_C_atm: bool,
     temp_anomaly_feedback: bool,
-    temp_units: str,
-    flux_type: str,
-    plot_flux_diffs: bool,
 ):
     """
     start_year = 1750.0
@@ -111,11 +107,6 @@ def cambio(
     albedo_feedback = False
     stochastic_C_atm = False
     temp_anomaly_feedback = False
-    # Desired units
-    temp_units = "F"  # F, C, or K
-    c_units = "GtC"  # GtC, GtCO2, atm
-    flux_type = "/year"  # total, per year
-    plot_flux_diffs = True  # True, False
     """
 
     # Units of variables output by climate model:
@@ -157,7 +148,7 @@ def cambio(
     # These are just placeholders (values don't mean anything)
     climatestate["pH"] = 0
     climatestate["T_C"] = 0
-    climatestate["T_F"] = 0
+    # climatestate["T_F"] = 0
     climatestate["F_ha"] = 0
     climatestate["F_ao"] = 0
     climatestate["F_oa"] = 0
@@ -261,7 +252,7 @@ def propagate_climate_state(
     # Ordinary diagnostics
     pH = climateParams.diagnose_ocean_surface_ph(c_atm)
     T_C = Diagnose_actual_temperature(t_anom)
-    # T_F = Diagnose_degreesF(T_C)
+    # T_F = diagnose_degrees_f(T_C)
 
     # Create a new climate state with these updates
     climatestate: dict[str, float] = {}
