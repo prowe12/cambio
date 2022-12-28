@@ -14,7 +14,37 @@ from plotly.graph_objs import Scatter
 
 from cambio.utils.cambio import cambio
 
+def getcolor(i) -> str:
+    """
+    Return a a color
+    @returns  A string representing a color
+    """
+    colors = [
+        'red',
+        'orange',
+        'green',
+        'cyan',
+        'blue',
+        'magenta',
+        'black',
+        'gray',
+        'cornflowerblue',
+        'olive',
+        'tomato',
+        'rosybrown',
+        'cadetblue',
+        'orchid',
+        'purple',
+    ]
+    j = i%len(colors)
+    return colors[j]
+
 def parse_cambio_inputs(input_dict: dict[str, Any]) -> dict[str, Any]:
+    """
+    Parse the inputs
+    @param input_dict  A hashmap of the input variable names and their values as strings
+    @returns  A hashmap of the input variable names and their values as the proper type
+    """
     
     # Default values
     inputs = {
@@ -69,24 +99,13 @@ def parse_cambio_inputs(input_dict: dict[str, Any]) -> dict[str, Any]:
             print(f"Error converting value {varname}={valstr} to {vartype}")
     return inputs
 
-def index(request):
-    # Values that must be in the database
-    defaultyear = 2100
-
-    # Need to remove this
-    climvar = request.GET.get('climvar', 'f_ha')
-    disp_scenario = "3"
-    years = 2022
-
-
-
+def run_model(scenario_inputs, request):
+    """
+    Run the model for the inputs
+    """
+    
     # Get cambio inputs from GET params
     inputs = parse_cambio_inputs(request.GET)
-
-    # Get cambio inputs from cookies
-    cookie_scenarios = [json.loads(value) for input, value in request.COOKIES.items()]
-    cookie_scenarios = list(filter(lambda x: isinstance(x, dict), cookie_scenarios))
-    scenario_inputs = [parse_cambio_inputs(scenario) for scenario in cookie_scenarios]
 
     # if the new scenario is different from all old scenarios, add it
     new_hash = str(hash(json.dumps(inputs)))
@@ -114,6 +133,14 @@ def index(request):
             scenario_input['plot_flux_diffs'],
         )
         scenarios.append(climate)
+    return scenarios
+
+def make_plots(scenarios):
+    """
+    Return the plots that will be displayed
+    @param scenarios  The climate model run results
+    @returns  The plots
+    """
 
     climvarval_selected_names = ["F_ha", "T_anomaly", "pH","albedo"]
     climvarvals = [[] for i in range(len(climvarval_selected_names))]
@@ -124,122 +151,45 @@ def index(request):
         for i,name in enumerate(climvarval_selected_names):
             climvarvals[i].append(scenario[name])
         years.append(scenario["year"])
-    print("climvarvals is:", climvarvals)
+    # print("climvarvals is:", climvarvals)
 
-
-    colors = [
-        'red',
-        'orange',
-        'green',
-        'cyan',
-        'blue',
-        'magenta',
-        'black',
-        'gray',
-        'cornflowerblue',
-        'olive',
-        'tomato',
-        'rosybrown',
-        'cadetblue',
-        'orchid',
-        'purple',
-    ]
-
-    # The plot
-    if len(scenarios)==0:
-        plot_div=''
-    else:
-        plot_divs = []
+    # The plots
+    plot_divs = []
+    if len(scenarios)>0:
         for climvar_name, climvarval in zip(climvarval_selected_names, climvarvals):
             print(f'plotting {climvar_name}, there should be {len(climvarval)} simulations')
             plot_divs.append(plot({'data':
             [
                 Scatter(x=xvals, y=yvals,
                         mode='lines', name=f'Scenario {i}',
-                        opacity=0.8, marker_color=colors[i%len(colors)]) \
+                        opacity=0.8, marker_color=getcolor(i)) \
                 for i,(xvals,yvals) in enumerate(zip(years,climvarval))
             ],
                     'layout': {'xaxis': {'title': 'year'},
                     'yaxis': {'title': climvar_name}}},
             output_type='div', include_plotlyjs=False))
+            
+    return plot_divs
 
-    # Names for displaying climate variables
-    climvar_names = {
-                     'f_ha': 'CO2 flux from humans (GTC)',
-                     'atmos_co2': 'Atmospheric CO2 (GTC)',
-                     'ocean_co2': 'Ocean CO2 (GTC)',
-                     'ocean_ph': 'Ocean pH (GTC)',
-                     't_C': 'temperature (C)',
-                     't_F': 'temperature (F)',
-                     't_anomaly': 'temp. anomaly (C)',
-                     'albedo': 'albedo',
-                     'f_oa': 'CO2 flux from ocean (GTC)',
-                     'f_la': 'CO2 flux from land (GTC)',
-                     'tot_ha': 'total CO2 from humans (GTC)',
-                    }
+def index(request):
+    """
+    Create the view for the main page
+    @param request  The HttpRequest
+    """
 
-    #climvar_names_bot = dict(climvar_names) # {key:value for key,value in climvar_names}
-    #climvar_names_bot['year'] = 'year'
+    # Get cambio inputs from cookies
+    cookie_scenarios = [json.loads(value) for input, value in request.COOKIES.items()]
+    cookie_scenarios = list(filter(lambda x: isinstance(x, dict), cookie_scenarios))
+    scenario_inputs = [parse_cambio_inputs(scenario) for scenario in cookie_scenarios]
 
-    #disp_outyear = {}
-    # SQL: disp_inp <-- select * from ClimInputs where scenario=disp_scenario
-    #disp_inp = get_object_or_404(ClimInputs, scenario=disp_scenario)
+    # Run the model on old and new inputs to get the climate model results
+    # (Packed into "scenarios")
+    scenarios = run_model(scenario_inputs, request)
 
-    # TODO: add elif for when year is in the database, so no need to interpolate
-    # disp_outyear = disp_inp.climoutputs_set.get(year=year)
-
-    # disp_out = {}
-    # if year == '' or year is None:
-    #     disp_outyear['year'] = ''
-    #     disp_yearbef = (disp_inp.climoutputs_set.get(year=defaultyear)).get_fields()
-    #     for i,(name, value) in enumerate(disp_yearbef):
-    #         if name != 'id' and name != 'scenario':
-    #             disp_outyear[name] = ''
-    #             disp_out[climvar_names_bot[name]] = ''
-    # else:
-    #     # SQL: select [atts of climoutputs] from disp_inp natural_join climoutputs
-    #     disp_all = disp_inp.climoutputs_set.all()
-
-    #     year = float(year)
-    #     yearmin = disp_all.all().aggregate(Min('year'))['year__min']
-    #     yearmax = disp_all.all().aggregate(Max('year'))['year__max']
-    #     if year < yearmin:
-    #         year = yearmin
-    #     elif year > yearmax:
-    #         year = yearmax
-
-    #     # Get the indices to the year before and after the years of interest
-    #     # Product.objects.all().aggregate(Min('price'))
-    #     iyear = [i for i,disp_year in enumerate(disp_all) if disp_year.year>=int(year)][0]
-    #     if iyear <= 0:
-    #         iyear = 1
-
-    #     # Interpolate everything to the selected year
-    #     yearbef = disp_all[iyear-1].year
-    #     yearaft = disp_all[iyear].year
-    #     wtaft = (year-yearbef)/(yearaft-yearbef)
-    #     wtbef = (yearaft-year)/(yearaft-yearbef)
-    #     disp_yearbef = (disp_inp.climoutputs_set.get(year=yearbef)).get_fields()
-    #     disp_yearaft = (disp_inp.climoutputs_set.get(year=yearaft)).get_fields()
-    #     for i,(name, value) in enumerate(disp_yearbef):
-    #         if name != 'id' and name != 'scenario':
-    #             res = round(wtbef * float(value) + wtaft * float(disp_yearaft[i][1]), 2)
-    #             disp_outyear[name] = res
-    #             disp_out[climvar_names_bot[name]] = str(res)
-
-    climateinputs = []
-    disp_out = []
-
+    plot_divs = make_plots(scenarios)
+    
     context = {
-        'climateinputs': climateinputs,
-        'years': years,
-        'scenario': scenarios,
-        'climvar': climvar,
-        'disp_scenario': disp_scenario,
-        'year': years,
         'plot_divs': plot_divs,
-        'climvar_names': climvar_names,
-        'disp_out': disp_out,
     }
     response = render(request, 'cambio/index.html', context)
 
@@ -251,3 +201,19 @@ def index(request):
         response.set_cookie(scenario_hash, scenario)
 
     return response
+
+
+# Names for displaying climate variables
+# climvar_names = {
+#                  'f_ha': 'CO2 flux from humans (GTC)',
+#                  'atmos_co2': 'Atmospheric CO2 (GTC)',
+#                  'ocean_co2': 'Ocean CO2 (GTC)',
+#                  'ocean_ph': 'Ocean pH (GTC)',
+#                  't_C': 'temperature (C)',
+#                  't_F': 'temperature (F)',
+#                  't_anomaly': 'temp. anomaly (C)',
+#                  'albedo': 'albedo',
+#                  'f_oa': 'CO2 flux from ocean (GTC)',
+#                  'f_la': 'CO2 flux from land (GTC)',
+#                  'tot_ha': 'total CO2 from humans (GTC)',
+#                 }
