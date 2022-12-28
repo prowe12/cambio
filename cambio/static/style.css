@@ -1,4 +1,4 @@
-.scenario-buttons button {
+.vars-to-plot-buttons button {
     color: Black;
     padding: 10px 24px;
     cursor: pointer;
@@ -7,7 +7,7 @@
     border-radius: 12px;
 }
 
-.scenario-buttons input {
+.vars-to-plot-buttons input {
     color: Black;
     cursor: pointer;
     border-radius: 12px;

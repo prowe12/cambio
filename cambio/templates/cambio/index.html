@@ -66,20 +66,18 @@
       <!--Choices to plot above the top of the plot -->
       <div id="climate-variables-top" class="climate_variables">
         <!--Choose variables to plot -->
-        <div id="scenario-buttons-top">
-          {% if climateinputs %}
-          {% for inp in climateinputs %}
-          {% if "scenario"|addstr:inp.scenario in request.GET %}
-          <input class="scenario-buttons" type="checkbox" id="scenario{{name}}-{{inp.scenario}}"
-            name="scenario{{inp.scenario}}" value="on" checked>
-          {% else %}
-          <input type="checkbox" id="scenario{{name}}-{{inp.scenario}}" name="scenario{{inp.scenario}}" value="on">
-          {% endif %}
-          <label for="scenario{{name}}-{{inp.scenario}}">
-            Scenario{{inp.scenario}}: {{inp.start_year}}, {{inp.decarb_period}}, {{inp.final_emiss}}</label><br>
-          {% endfor %}
+        <div>
+          {% if vars_to_plot %}
+            {% for inp in vars_to_plot %}
+              {% if inp in request.GET %}
+                <input class="vars-to-plot-buttons " type="checkbox" id="{{inp}}"
+                  name="{{inp}}" value="on" checked>
+              {% else %}
+                <input type="checkbox" id="{{inp}}" name="{{inp}}" value="on">
+              {% endif %}
+                <label for="{{inp}}">{{inp}}</label>
+            {% endfor %}
 
-          <input type="submit" value="Submit" class="top_submit_button">
           {% else %}
             <p>Cannot choose variables to plot yet.</p>
           {% endif %}
@@ -104,7 +102,7 @@
         <!-- Django uses double brackets to render Python variables passed by the views to the templates. -->
         {% autoescape off %}
         {% for plot_div in plot_divs %}
-            {{ plot_div }}
+          {{ plot_div }}
         {% endfor %}
         {% endautoescape %}
       </div>

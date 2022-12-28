@@ -41,7 +41,7 @@ def getcolor(i) -> str:
     j = i%len(colors)
     return colors[j]
 
-def get_scenario_units(request):
+def get_scenario_units(request) -> dict[str]:
     """
     Get the units from the request
     """
@@ -50,6 +50,18 @@ def get_scenario_units(request):
     units["temp_units"] = inputs["temp_units"]
     return units
 
+def get_scenario_vars(request, getvars) -> dict[str]:
+    """
+    Get the variables to plot from the request
+    @params request  The HttpRequest
+    @params getvars  The variables to extract from the request
+    """
+    inputs = request.GET #parse_cambio_inputs(request.GET)
+    scenario_vars = {}
+    for getvar in getvars:
+        if getvar in inputs:
+            scenario_vars[getvar] = inputs[getvar]
+    return scenario_vars
 
 def parse_cambio_inputs_for_cookies(input_dict: dict[str, Any]) -> dict[str, Any]:
     """
@@ -234,7 +246,7 @@ def run_model(scenario_inputs, request) -> list[dict]:
         scenarios.append(climate)
     return scenarios
 
-def make_plots(scenarios, scenario_inputs):
+def make_plots(scenarios, scenario_inputs, carbon_vars):
     """
     Return the plots that will be displayed
     @param scenarios  The climate model run results
@@ -242,62 +254,71 @@ def make_plots(scenarios, scenario_inputs):
     @returns  The plots
     """
 
+    if len(carbon_vars) <= 0:
+        carbon_vars = ["F_ha"]
 
-    # if scenario_inputs["c_units"] == "GtC":
-    #     carbon = "F_ha"
-    # else:
-    #     raise ValueError("units not found")
-    
-    # if scenario_inputs["flux_type"] == "/year":
-    #     pass
-    # else:
-    #     raise ValueError("units not found")
-
-    climvarval_selected_names = ["F_ha", "T_C", "pH", "albedo"]
+    climvarval_selected_names = [["C_atm", "C_ocean"], carbon_vars, ["T_C"], ["pH"], ["albedo"]]
     climvarvals = [[] for i in range(len(climvarval_selected_names))]
-    labels = [[] for i in range(len(climvarval_selected_names))]
+    #labels = [[] for i in range(len(climvarval_selected_names))]
 
-    # get all scenarios
+    # Loop over variables and create the plots
+    plot_divs = []
     years = []
-    for scenario in scenarios:
-        for i,name in enumerate(climvarval_selected_names):
+    for list_of_names in climvarval_selected_names:
+        climvarvals = [[] for i in range(len(list_of_names))]
+        for i, name in enumerate(list_of_names):
             unit_name = ""
             label = name
             if name == "T_C":
                 unit_name = scenario_inputs["temp_units"]
-                label = "temperature" + " (" + unit_name + ")"
+                label = "T" + " (" + unit_name + ")"
+            else:
+                label = ""
+            
+            climvarvals = []
+            names = []
+            for j,scenario in enumerate(scenarios):
                 if unit_name == "F":
                     yvals = celsius_to_f(scenario[name])
-                    print("\n yvals:")
-                    print(yvals)
                 elif unit_name == "K":
                     yvals = celsius_to_kelvin(scenario[name])
+                elif unit_name == "C":
+                    yvals = scenario[name]
                 else:
                     yvals = scenario[name]
-            else:
-                yvals = scenario[name]
-            climvarvals[i].append(yvals)
-            labels[i] = label
-            
-        years.append(scenario["year"])
+                climvarvals.append(yvals)
+                years.append(scenario["year"])
+                names.append(f'Scenario {j}: {label}')
+        
+        print()
+        print(climvarvals[0][0])
+        print(climvarvals[0][1])
+        plot_divs.append(plot({'data':
+        [
+            Scatter(x=xvals, y=yvals,
+                    mode='lines', name=name,
+                    opacity=0.8, marker_color=getcolor(i)) \
+            for i,(xvals,yvals,name) in enumerate(zip(years, climvarvals,names))
+        ],
+                'layout': {'xaxis': {'title': 'year'},
+                'yaxis': {'title': label}}},
+        output_type='div', include_plotlyjs=False))
 
-    # print("climvarvals is:", climvarvals)
-
-    # The plots
-    plot_divs = []
-    if len(scenarios)>0:
-        for climvar_name, climvarval, label in zip(climvarval_selected_names, climvarvals, labels):
-            print(f'plotting {climvar_name}, there should be {len(climvarval)} simulations')
-            plot_divs.append(plot({'data':
-            [
-                Scatter(x=xvals, y=yvals,
-                        mode='lines', name=f'Scenario {i}',
-                        opacity=0.8, marker_color=getcolor(i)) \
-                for i,(xvals,yvals) in enumerate(zip(years,climvarval))
-            ],
-                    'layout': {'xaxis': {'title': 'year'},
-                    'yaxis': {'title': label}}},
-            output_type='div', include_plotlyjs=False))
+    # # The plots
+    # plot_divs = []
+    # if len(scenarios)>0:
+    #     for climvar_name, climvarval, label in zip(climvarval_selected_names, climvarvals, labels):
+    #         print(f'plotting {climvar_name}, there should be {len(climvarval)} simulations')
+    #         plot_divs.append(plot({'data':
+    #         [
+    #             Scatter(x=xvals, y=yvals,
+    #                     mode='lines', name=f'Scenario {i}',
+    #                     opacity=0.8, marker_color=getcolor(i)) \
+    #             for i,(xvals,yvals) in enumerate(zip(years,climvarval))
+    #         ],
+    #                 'layout': {'xaxis': {'title': 'year'},
+    #                 'yaxis': {'title': label}}},
+    #         output_type='div', include_plotlyjs=False))
             
     return plot_divs
 
@@ -307,11 +328,18 @@ def index(request):
     @param request  The HttpRequest
     """
 
+    # Choices of what to plot
+    carbon_vars_to_plot = ["C_atm", "C_ocean", "F_ha", "F_ao", "F_oa", "F_la", "F_al"]
+    temp_vars_to_plot = ["T_anomaly", "T_C"]
+    vars_to_plot = carbon_vars_to_plot + temp_vars_to_plot
+    # always plotted: "albedo", "pH"
+
     # Get cambio inputs from cookies
     cookie_scenarios = [json.loads(value) for input, value in request.COOKIES.items()]
     cookie_scenarios = list(filter(lambda x: isinstance(x, dict), cookie_scenarios))
     scenario_inputs = [parse_cambio_inputs(scenario) for scenario in cookie_scenarios]
     scenario_units = get_scenario_units(request)
+    carbon_vars = get_scenario_vars(request, carbon_vars_to_plot)
     # scenario_units = get_scenario_units(request.GET)
 
 
@@ -320,28 +348,12 @@ def index(request):
     scenarios = run_model(scenario_inputs, request)
 
     # Make the plots
-    plot_divs = make_plots(scenarios, scenario_units)
-
-    # Buttons to select what to plot
-    climateinputs = [] # "C_atm", "C_ocean"]
-#         climatestate["C_atm"] = c_atm
-#     climatestate["C_ocean"] = c_ocean
-#     climatestate["albedo"] = albedo
-#     climatestate["T_anomaly"] = t_anom
-#     climatestate["pH"] = pH
-#     climatestate["T_C"] = T_C
-#     # climatestate["T_F"] = T_F
-#     climatestate["F_ha"] = F_ha
-#     climatestate["F_ao"] = F_ao
-#     climatestate["F_oa"] = F_oa
-#     climatestate["F_la"] = F_la
-#     climatestate["F_al"] = F_al
-# ]
+    plot_divs = make_plots(scenarios, scenario_units, carbon_vars)
     
     # Variables to pass to html
     context = {
         'plot_divs': plot_divs,
-        'climateinputs': climateinputs,
+        'vars_to_plot': vars_to_plot,
     }
     response = render(request, 'cambio/index.html', context)
 
