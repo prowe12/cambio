@@ -25,8 +25,7 @@
       <div class="column1">
         <b>Climate Scenarios</b><br>
 
-        <!--<div id="years" class="climate_variables">-->
-        {% for i, scenario_input in old_scenario_inputs %}
+        {% for i, scenario_input in old_scenario_inputs.items %}
         <details>
           <summary>Scenario {{i}}</summary>
           <ul>
@@ -39,40 +38,44 @@
 
         <br>
         <b>Add new climate scenario:</b><br>
-        <label for="start_year">start year</label>
-        <input type="text" placeholder="1750" id="start_year" name="start_year"><br>
-        <label for="stop_year">ending year</label>
-        <input type="text" placeholder="2200" id="stop_year" name="stop_year"><br>
-        <label for="dtime">Time resolution</label>
-        <input type="text" placeholder="1.0" id="dtime" name="dtime"><br> <!--time resolution (years) -->
-        <label for="inv_time_constant">Inverse time constant</label>
-        <input type="text" placeholder="0.025" id="inv_time_constant" name="inv_time_constant"><br>
-        <label for="transition_year">Year of peak emissions</label>
-        <input type="text" placeholder="2040" id="transition_year" name="transition_year"><br>
-        <!-- # year to start decreasing CO2 -->
-        <label for="transition_duration">Time to transition</label>
-        <input type="text" placeholder="20" id="transition_duration" name="transition_duration"><br>
-        <!--years over which to decrease co2  -->
-        <label for="long_term_emissions">Long term emissions</label>
-        <input type="text" placeholder="2" id="long_term_emissions" name="long_term_emissions"><br>
-        <!--# ongoing carbon emissions after decarbonization  -->
-        <b>Feedbacks</b><br>
-        <label for="albedo_with_no_constraint">Contraint on albedo</label>
-        <input type="text" placeholder="False" id="albedo_with_no_constraint" name="albedo_with_no_constraint"><br>
-        <!-- -->
-        <label for="albedo_feedback">Albedo feedback</label>
-        <input type="text" placeholder="False" id="albedo_feedback" name="albedo_feedback"><br> <!-- -->
-        <label for="temp_anomaly_feedback">Temperature feedback</label>
-        <input type="text" placeholder="False" id="temp_anomaly_feedback" name="temp_anomaly_feedback"><br> <!-- -->
-        <b>Noise</b><br>
-        <label for="stochastic_C_atm">Turn on noise</label>
-        <input type="text" placeholder="False" id="stochastic_C_atm" name="stochastic_C_atm"><br> <!-- -->
-        <label for="stochastic_c_atm_std_dev">Noise level</label>
-        <input type="text" placeholder="0.1 " id="stochastic_c_atm_std_dev" name="stochastic_c_atm_std_dev">
-        <br><!-- -->
-        <button type="submit" value="Submit" formaction="/cambio/{{name}}">Submit</button>
+        {% for inp,dflt in inputs.items %}
+        <label for="{{inp}}">{{inp}}</label>
+        <input type="text" placeholder="{{dflt}}" id="{{inp}}" name="{{inp}}"><br>
+        {% endfor %}
+        <button type="submit" value="Submit" formaction="/cambio/{{name}}">Add</button>
+
+        <br><br>
+        <b>Delete climate scenario:</b><br>
+        {% for scenario in scenarios %}
+        {% if scenario in request.GET %}
+        <input class="vars-to-plot-buttons " type="checkbox" id="del_scenario{{scenario}}"
+          name="del_scenario{{scenario}}" value="on" checked>
+        {% else %}
+        <input type="checkbox" id="del_scenario{{scenario}}" name="del_scenario{{scenario}}" value="on">
+        {% endif %}
+        <label for="del_{{scenario}}">{{scenario}}</label>
+        {% endfor %}
+        <br>
+        <button type="submit" value="Submit" formaction="/cambio/{{name}}">Delete</button>
 
         <br><br><br><br><br><br><br><br><br><br><br>
+      </div>
+
+      <div id="climate-variables-top" class="climate_variables">
+        <b>Scenarios to plot</b>
+        <div>
+          {% for plot_scenario in plot_scenarios %}
+          {% if plot_scenario in request.GET %}
+          <input class="vars-to-plot-buttons " type="checkbox" id="{{plot_scenario}}" name="{{plot_scenario}}"
+            value="on" checked>
+          {% else %}
+          <input type="checkbox" id="{{plot_scenario}}" name="{{plot_scenario}}" value="on">
+          {% endif %}
+          <label for="{{plot_scenario}}">{{plot_scenario}}</label>
+          {% endfor %}
+          &nbsp&nbsp&nbsp
+          <button type="submit" value="Submit" formaction="/cambio/{{name}}">Plot</button>
+        </div>
       </div>
 
       <div class="graph_area" id="graph_area">
@@ -110,9 +113,9 @@
 
 
   <br> <br>
-  &nbsp; The CAMBIO Climate model was made by Professor Steven Neshyba at the University of Puget Sound.
+  &nbsp; The CAMBIO Climate model was created by Professor Steven Neshyba at the University of Puget Sound.
   <br>
-  &nbsp; This WebApp was created by Penny Rowe and Daniel Neshyba-Rowe, Dec. 2022
+  &nbsp; This WebApp was developed by Penny Rowe and Daniel Neshyba-Rowe, Dec. 2022
   <br><br>
 </body>
 

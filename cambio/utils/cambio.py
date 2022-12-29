@@ -73,9 +73,9 @@ import numpy.typing as npt
 
 
 from cambio.utils.cambio_utils import make_emissions_scenario_lte, is_same
-from cambio.utils.preindustrial_inputs import *
 from cambio.utils.climate_params import ClimateParams
-from cambio.utils.cambio_utils import Diagnose_actual_temperature, diagnose_degrees_f
+from cambio.utils.preindustrial_inputs import preindustrial_inputs
+from cambio.utils.cambio_utils import diagnose_actual_temperature, diagnose_degrees_f
 
 
 def cambio(
@@ -89,7 +89,7 @@ def cambio(
     stochastic_c_atm_std_dev: float,
     albedo_with_no_constraint: bool,
     albedo_feedback: bool,
-    stochastic_C_atm: bool,
+    stochastic_c_atm: bool,
     temp_anomaly_feedback: bool,
 ):
     """
@@ -104,7 +104,7 @@ def cambio(
     stochastic_c_atm_std_dev = 0.1
     albedo_with_no_constraint = False
     albedo_feedback = False
-    stochastic_C_atm = False
+    stochastic_c_atm = False
     temp_anomaly_feedback = False
     """
 
@@ -131,7 +131,7 @@ def cambio(
     # containing the climate state containing preindustrial parameters.
     # We've set the starting year to what was specified above when you
     # created your scenario.
-    # climate_params = preindustrial_inputs.climate_params
+    climate_params = preindustrial_inputs()
     climateParams = ClimateParams(stochastic_c_atm_std_dev)
 
     # Propagating through time
@@ -165,7 +165,14 @@ def cambio(
 
         # Propagate
         climatestate = propagate_climate_state(
-            climatestate, climateParams, dtime, f_ha=flux_human_atm[i]
+            climatestate,
+            climateParams,
+            dtime,
+            flux_human_atm[i],
+            albedo_with_no_constraint,
+            albedo_feedback,
+            stochastic_c_atm,
+            temp_anomaly_feedback,
         )
 
         # Append to climate variables
@@ -188,7 +195,7 @@ def propagate_climate_state(
     f_ha: float = 0,
     albedo_with_no_constraint: bool = False,
     albedo_feedback: bool = False,
-    stochastic_C_atm: bool = False,
+    stochastic_c_atm: bool = False,
     temp_anomaly_feedback: bool = False,
 ) -> dict[str, float]:
     """
@@ -244,12 +251,12 @@ def propagate_climate_state(
         t_anom += climateParams.diagnose_delta_t_from_albedo(albedo)
 
     # Stochasticity in the model (if we want it)
-    if stochastic_C_atm:
+    if stochastic_c_atm:
         c_atm = climateParams.diagnose_stochastic_c_atm(c_atm)
 
     # Ordinary diagnostics
     ph_ = climateParams.diagnose_ocean_surface_ph(c_atm)
-    temp_c = Diagnose_actual_temperature(t_anom)
+    temp_c = diagnose_actual_temperature(t_anom)
 
     # Create a new climate state with these updates
     climatestate: dict[str, float] = {}
