@@ -43,7 +43,11 @@ def getcolor(i: int) -> str:
     return colors[j]
 
 
-def parse_inputs(input_dict: dict[str, Any], inputs, varnames) -> dict[str, Any]:
+def parse_inputs(
+    input_dict: dict[str, Any] | QueryDict,
+    default_inputs: dict[str, int | float | bool | str],
+    input_types: dict[str, Any],
+) -> dict[str, Any]:
     """
     Parse the inputs
     @param input_dict  A hashmap of the input variable names and their values as strings
@@ -51,20 +55,26 @@ def parse_inputs(input_dict: dict[str, Any], inputs, varnames) -> dict[str, Any]
     @params varnames The types of the variables
     @returns  A hashmap of the input variable names and their values as the proper type
     """
-    for varname, vartype in varnames.items():
+    parsed_inputs: dict[str, Any] = {}
+    for varname, vartype in input_types.items():
+
+        # set values default initially
+        parsed_inputs[varname] = default_inputs[varname]
+
+        # if not specified, keep them at default
         if varname not in input_dict:
             continue
-
         valstr = input_dict[varname]
         if valstr == "":
             continue
 
+        # if specified, set to specified
         # TODO: this might make us vulnerable to injection code
         try:
-            inputs[varname] = vartype(valstr)
+            parsed_inputs[varname] = vartype(valstr)
         except ValueError:
             print(f"Error converting value {varname}={valstr} to {vartype}")
-    return inputs
+    return parsed_inputs
 
 
 # def run_model_for_dict(

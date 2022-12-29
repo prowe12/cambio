@@ -25,18 +25,18 @@ from cambio.utils.view_utils import (
 )
 
 
-def get_scenarios_to_plot(request: HttpRequest) -> list[int]:
+def get_scenarios(request: HttpRequest, get_prefix: str) -> list[str]:
     """
     Get the scenario ids to plot
     @params request  The HttpRequest
     @returns The scenario ids to plot
     """
-    max_scen = 100
-    scenario_ids = [
-        i
-        for i in range(max_scen)
-        if request.GET.get(f"plot_scenario{i}", None) is not None
-    ]
+
+    scenario_ids: list[str] = []
+    for get_param in request.GET.keys():
+        if not get_param.startswith(get_prefix):
+            continue
+        scenario_ids.append(get_param[len(get_prefix) :])
     return scenario_ids
 
 
@@ -83,7 +83,7 @@ def index(request: HttpRequest) -> HttpResponse:
     # # # # # #     Constants    # # # # # # # # # #
     # Default values
     model_run_default_inputs = {
-        "id": 0,
+        "id": "0",
         "start_year": 1750.0,  # <!-- start_year"><br> -->
         "stop_year": 2200.0,  # stop_year"><br> -->
         "dtime": 1.0,  # dtime"><br> time resolution (years) -->
@@ -98,7 +98,7 @@ def index(request: HttpRequest) -> HttpResponse:
         "stochastic_c_atm_std_dev": 0.1,  # stochastic_c_atm_std_dev"> <br> -->
     }
     model_run_default_types = {
-        "id": int,
+        "id": str,
         "start_year": float,
         "stop_year": float,
         "dtime": float,
@@ -146,53 +146,58 @@ def index(request: HttpRequest) -> HttpResponse:
     # # # # # # # # # # # # # # # # # # # # # # #
 
     # Get variables from request:
-    scenarios_to_plot = get_scenarios_to_plot(request)
+    scenarios_ids_to_plot = get_scenarios(request, "plot_scenario")
+    scenarios_ids_to_delete = get_scenarios(request, "del_scenario")
     scenario_units = get_scenario_units(request, unit_defaults, unit_types)
     carbon_vars = get_scenario_vars(request, carbon_vars_to_plot)
     flux_vars = get_scenario_vars(request, flux_vars_to_plot)
     temp_vars = get_scenario_vars(request, temp_vars_to_plot)
 
     # Get cambio inputs from cookies
-    cookie_scenarios = [json.loads(value) for value in request.COOKIES.values()]
-    cookie_scenarios = list(filter(lambda x: isinstance(x, dict), cookie_scenarios))
 
-    # Put in hashmap (no duplicates allowed)
-    cookie_scenarios_dict = {}
-    for cookie in cookie_scenarios:
-        cookie_scenarios_dict[cookie["id"]] = cookie
+    scenario_inputs_raw = {
+        scenario_id: json.loads(value) for scenario_id, value in request.COOKIES.items()
+    }
+    scenario_inputs: dict[str, dict[str, Any]] = {}
+    for scenario_id, scenario in scenario_inputs_raw.items():
 
-    # scenario_inputs = [
-    #     parse_cambio_inputs_for_cookies(scenario) for scenario in cookie_scenarios
-    # ]
-    scenario_inputs_dict = {}
-    for scenario_id, scenario in cookie_scenarios_dict.items():
-        scenario_inputs_dict[scenario_id] = parse_inputs(
+        parsed = parse_inputs(
             scenario, model_run_default_inputs, model_run_default_types
         )
+        scenario_inputs[scenario_id] = parsed
 
     # Get new scenario from get parameters for model run and for saving to cookies
     # *only* if it exists
     new_cookie = False
-    new_id = []
-    if "id" in request.GET:
+    new_scenario_id = ""
+    if "id" in request.GET and request.GET["id"]:
         inputs = parse_inputs(
             request.GET, model_run_default_inputs, model_run_default_types
         )
-        new_hash = str(hash(json.dumps(inputs)))
-        # if new_hash not in request.COOKIES.keys():
-        #    scenario_inputs.append(inputs)
-        if new_hash not in request.COOKIES.keys():
-            scenario_inputs_dict[inputs["id"]] = inputs
-            new_cookie = True
-            new_id = inputs["id"]
+
+        new_scenario_id = inputs["id"]
+        scenario_inputs[new_scenario_id] = inputs
+        new_cookie = True
+
+    # remove all scenarios that are scheduled to be deleted
+    scenario_inputs = {
+        key: value
+        for key, value in scenario_inputs.items()
+        if key not in scenarios_ids_to_delete
+    }
 
     # Run the model on old and new inputs to get the climate model results
     # (Packed into "scenarios")
     # scenarios = run_model(scenario_inputs, request)
-    scenarios = run_model_for_dict(scenario_inputs_dict)
+    scenarios = run_model_for_dict(scenario_inputs)
+    scenarios_to_plot = [
+        scenarios[scenario_id]
+        for scenario_id in scenarios_ids_to_plot
+        if scenario_id in scenarios
+    ]
 
     plot_divs, _ = make_plots(
-        [scenarios[i] for i in scenarios_to_plot],
+        scenarios_to_plot,
         scenario_units,
         list(carbon_vars.keys()),
         list(flux_vars.keys()),
@@ -204,20 +209,13 @@ def index(request: HttpRequest) -> HttpResponse:
     ]
 
     scenario_ids = list(scenarios.keys())
-    if len(scenario_ids) <= 0:
-        scenario_ids = []
-    elif len(scenario_ids) == 1:
-        pass
-    else:
-        scenario_ids = np.sort(scenario_ids)
-
-    plot_scenarios = ["plot_scenario" + str(id) for id in scenario_ids]
+    plot_scenarios = [f"plot_scenario{scenario_id}" for scenario_id in scenario_ids]
 
     # Variables to pass to html
     context = {
         "plot_divs": plot_div_stuff,
         "vars_to_plot": vars_to_plot,
-        "old_scenario_inputs": scenario_inputs_dict,
+        "old_scenario_inputs": scenario_inputs,
         "scenarios": scenario_ids,
         "plot_scenarios": plot_scenarios,
         "inputs": model_run_default_inputs,
@@ -227,12 +225,12 @@ def index(request: HttpRequest) -> HttpResponse:
 
     # If there is a new scenario in the get parameters, save it to cookies
     if new_cookie:
-        scenario = json.dumps(scenario_inputs_dict[new_id])
-        scenario_hash = str(hash(scenario))
-        # don't add the new scenario to cookies if it already exists
-        # (should not be necessary)
-        if scenario_hash not in request.COOKIES.keys():
-            response.set_cookie(scenario_hash, scenario)
+        scenario = json.dumps(scenario_inputs[new_scenario_id])
+        response.set_cookie(new_scenario_id, scenario)
+
+    # delete all unwanted scenarios:
+    for cookie_name in scenarios_ids_to_delete:
+        response.delete_cookie(cookie_name)
 
     return response
 
