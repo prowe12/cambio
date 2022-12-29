@@ -428,6 +428,7 @@ def index(request: HttpRequest) -> HttpResponse:
     context = {
         "plot_divs": plot_div_stuff,
         "vars_to_plot": vars_to_plot,
+        "old_scenario_inputs": enumerate(scenario_inputs),
     }
     response = render(request, "cambio/index.html", context)
 

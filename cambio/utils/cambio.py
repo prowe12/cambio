@@ -111,7 +111,7 @@ def cambio(
     # Units of variables output by climate model:
     # C_atm and C_ocean: GtC, I think
     # T_anomaly: K
-    # F_al, F_la, F_ao, F_oa, F_ha: GtC/year
+    # f_al, f_la, f_ao, f_oa, f_ha: GtC/year
 
     # Call the LTE emissions scenario maker with these parameters
     # time is in years
@@ -147,7 +147,6 @@ def cambio(
     # These are just placeholders (values don't mean anything)
     climatestate["pH"] = 0
     climatestate["T_C"] = 0
-    # climatestate["T_F"] = 0
     climatestate["F_ha"] = 0
     climatestate["F_ao"] = 0
     climatestate["F_oa"] = 0
@@ -166,7 +165,7 @@ def cambio(
 
         # Propagate
         climatestate = propagate_climate_state(
-            climatestate, climateParams, dtime, F_ha=flux_human_atm[i]
+            climatestate, climateParams, dtime, f_ha=flux_human_atm[i]
         )
 
         # Append to climate variables
@@ -186,7 +185,7 @@ def propagate_climate_state(
     prev_climatestate: dict[str, float],
     climateParams: ClimateParams,
     dtime: float = 1,
-    F_ha: float = 0,
+    f_ha: float = 0,
     albedo_with_no_constraint: bool = False,
     albedo_feedback: bool = False,
     stochastic_C_atm: bool = False,
@@ -217,19 +216,19 @@ def propagate_climate_state(
 
     # Get fluxes (optionally activating the impact temperature has on them)
     if temp_anomaly_feedback:
-        F_oa = climateParams.diagnose_flux_ocean_atm(c_ocean, t_anom)
-        F_al = climateParams.diagnose_flux_atm_land(t_anom, c_atm)
+        f_oa = climateParams.diagnose_flux_ocean_atm(c_ocean, t_anom)
+        f_al = climateParams.diagnose_flux_atm_land(t_anom, c_atm)
     else:
-        F_oa = climateParams.diagnose_flux_ocean_atm(c_ocean, 0)
-        F_al = climateParams.diagnose_flux_atm_land(0, c_atm)
+        f_oa = climateParams.diagnose_flux_ocean_atm(c_ocean, 0)
+        f_al = climateParams.diagnose_flux_atm_land(0, c_atm)
 
     # Get other fluxes resulting from carbon concentrations
-    F_ao = climateParams.diagnose_flux_atm_ocean(c_atm)
-    F_la = climateParams.diagnose_flux_land_atm()
+    f_ao = climateParams.diagnose_flux_atm_ocean(c_atm)
+    f_la = climateParams.diagnose_flux_land_atm()
 
     # Update concentrations of carbon based on these fluxes
-    c_atm += (F_la + F_oa - F_ao - F_al + F_ha) * dtime
-    c_ocean += (F_ao - F_oa) * dtime
+    c_atm += (f_la + f_oa - f_ao - f_al + f_ha) * dtime
+    c_ocean += (f_ao - f_oa) * dtime
 
     # Get albedo from temperature anomaly (optionally activating a
     # constraint in case it's changing too fast)
@@ -249,8 +248,8 @@ def propagate_climate_state(
         c_atm = climateParams.diagnose_stochastic_c_atm(c_atm)
 
     # Ordinary diagnostics
-    pH = climateParams.diagnose_ocean_surface_ph(c_atm)
-    T_C = Diagnose_actual_temperature(t_anom)
+    ph_ = climateParams.diagnose_ocean_surface_ph(c_atm)
+    temp_c = Diagnose_actual_temperature(t_anom)
 
     # Create a new climate state with these updates
     climatestate: dict[str, float] = {}
@@ -258,13 +257,13 @@ def propagate_climate_state(
     climatestate["C_ocean"] = c_ocean
     climatestate["albedo"] = albedo
     climatestate["T_anomaly"] = t_anom
-    climatestate["pH"] = pH
-    climatestate["T_C"] = T_C
-    climatestate["F_ha"] = F_ha
-    climatestate["F_ao"] = F_ao
-    climatestate["F_oa"] = F_oa
-    climatestate["F_la"] = F_la
-    climatestate["F_al"] = F_al
+    climatestate["pH"] = ph_
+    climatestate["T_C"] = temp_c
+    climatestate["F_ha"] = f_ha
+    climatestate["F_ao"] = f_ao
+    climatestate["F_oa"] = f_oa
+    climatestate["F_la"] = f_la
+    climatestate["F_al"] = f_al
     climatestate["year"] = prev_climatestate["year"] + dtime
 
     # Return the new climate state
