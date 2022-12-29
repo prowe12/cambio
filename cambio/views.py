@@ -399,7 +399,9 @@ def index(request: HttpRequest) -> HttpResponse:
     # Get cambio inputs from cookies
     cookie_scenarios = [json.loads(value) for value in request.COOKIES.values()]
     cookie_scenarios = list(filter(lambda x: isinstance(x, dict), cookie_scenarios))
-    scenario_inputs = [parse_cambio_inputs(scenario) for scenario in cookie_scenarios]
+    scenario_inputs = [
+        parse_cambio_inputs_for_cookies(scenario) for scenario in cookie_scenarios
+    ]
     scenario_units = get_scenario_units(request)
     carbon_vars = get_scenario_vars(request, carbon_vars_to_plot)
     flux_vars = get_scenario_vars(request, flux_vars_to_plot)
