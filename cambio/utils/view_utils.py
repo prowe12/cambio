@@ -5,8 +5,6 @@ By Penny Rowe and Daniel Neshyba-Rowe
 Based on Benchly, by Ben Gamble, Charlie Dahl, and Penny Rowe
 """
 
-import json
-
 from typing import Any
 from plotly.offline import plot
 from plotly.graph_objs import Scatter
@@ -80,7 +78,9 @@ def parse_inputs(
 # def run_model_for_dict(
 #     scenario_inputs: dict[dict[str, Any]]
 # ) -> dict[dict[str, NDArray[Any]]]:
-def run_model_for_dict(scenario_inputs):
+def run_model_for_dict(
+    scenario_inputs: dict[str, dict[str, Any]]
+) -> dict[str, dict[str, NDArray[Any]]]:
     """
     Run the model for the inputs
     @param scenario_inputs
@@ -89,7 +89,7 @@ def run_model_for_dict(scenario_inputs):
     """
     # Run the model
     # scenarios: dict[dict[str, NDArray[Any]]] = {}
-    scenarios = {}
+    scenarios: dict[str, dict[str, NDArray[Any]]] = {}
     for scenario_id, scenario_input in scenario_inputs.items():
         climate, _ = cambio(
             scenario_input["start_year"],
@@ -109,19 +109,19 @@ def run_model_for_dict(scenario_inputs):
     return scenarios
 
 
-def return_same(x):
+def return_same(x: float) -> float:
     return x
 
 
-def dt_c_to_dt_f(x):
+def dt_c_to_dt_f(x: float) -> float:
     return x * 9 / 5
 
 
-def gtc_to_gtco2(x):
+def gtc_to_gtco2(x: float) -> float:
     return x / 0.27
 
 
-def gtc_to_atm(x):
+def gtc_to_atm(x: float) -> float:
     return x / 2.12
 
 
@@ -167,7 +167,7 @@ def make_plots(
         names: list[str] = []
         years: list[NDArray[Any]] = []
         climvarvals: list[float | NDArray[Any]] = []
-        for i, name in enumerate(list_of_names):
+        for name in list_of_names:
             unit_name = unit
             label = name
             conversion_fun = return_same
@@ -185,8 +185,6 @@ def make_plots(
             elif name == "T_anomaly":
                 if unit_name == "F":
                     conversion_fun = dt_c_to_dt_f
-                else:
-                    yvals = scenario[name]
             elif name in ("F_ha", "F_la", "F_al", "F_ao", "F_oa"):
                 if unit_name == "GtCO2/year":
                     conversion_fun = gtc_to_gtco2
@@ -221,136 +219,3 @@ def make_plots(
         )
 
     return plot_divs, units
-
-
-# def run_model(
-#     scenario_inputs: list[dict[str, Any]], request: HttpRequest
-# ) -> list[dict[str, NDArray[Any]]]:
-#     """
-#     Run the model for the inputs
-#     @param scenario_inputs
-#     @param request
-#     @returns Climate model run outputs
-#     """
-
-#     # Get cambio inputs from GET params for saving to cookies
-#     # and if the new scenario is different from all old scenarios, add it
-#     inputs = parse_cambio_inputs_for_cookies(request.GET)
-#     new_hash = str(hash(json.dumps(inputs)))
-#     if new_hash not in request.COOKIES.keys():
-#         scenario_inputs.append(inputs)
-
-#     # Run the model
-#     scenarios: list[dict[str, NDArray[Any]]] = []
-#     for scenario_input in scenario_inputs:
-#         climate, _ = cambio(
-#             scenario_input["start_year"],
-#             scenario_input["stop_year"],
-#             scenario_input["dtime"],
-#             scenario_input["inv_time_constant"],
-#             scenario_input["transition_year"],
-#             scenario_input["transition_duration"],
-#             scenario_input["long_term_emissions"],
-#             scenario_input["stochastic_c_atm_std_dev"],
-#             scenario_input["albedo_with_no_constraint"],
-#             scenario_input["albedo_feedback"],
-#             scenario_input["stochastic_C_atm"],
-#             scenario_input["temp_anomaly_feedback"],
-#         )
-#         scenarios.append(climate)
-#     return scenarios
-
-
-# def parse_cambio_inputs(input_dict: dict[str, Any]) -> dict[str, Any]:
-#     """
-#     Parse the inputs
-#     @param input_dict  A hashmap of the input variable names and their values as strings
-#     @returns  A hashmap of the input variable names and their values as the proper type
-#     """
-
-#     # Default values
-#     inputs = {
-#         "start_year": 1750.0,  # <!-- start_year"><br> -->
-#         "stop_year": 2200.0,  # stop_year"><br> -->
-#         "dtime": 1.0,  # dtime"><br> time resolution (years) -->
-#         "inv_time_constant": 0.025,  # inv_time_constant"><br> -->
-#         "transition_year": 2040.0,  # transition_year"><br> # year to start decreasing CO2 -->
-#         "transition_duration": 20.0,  # transition_duration"><br> years over which to decrease co2  -->
-#         "long_term_emissions": 2.0,  # long_term_emissions"><br> # ongoing carbon emissions after decarbonization  -->
-#         "albedo_with_no_constraint": False,  # albedo_with_no_constraint"><br> -->
-#         "albedo_feedback": False,  # albedo_feedback"><br> -->
-#         "temp_anomaly_feedback": False,  # temp_anomaly_feedback"><br> -->
-#         "stochastic_C_atm": False,  # stochastic_C_atm"><br> -->
-#         "stochastic_c_atm_std_dev": 0.1,  # stochastic_c_atm_std_dev"> <br> -->
-#         "temp_units": "F",  # temp_units"><br> # F, C, or K -->
-#         "c_units": "GtC",  # c_units"><br> GtC, GtCO2, atm  -->
-#         "flux_type": "/year",  # flux_type"><br> # total, per year-->
-#         "plot_flux_diffs": True,  # plot_flux_diffs"><br> -->
-#     }
-#     varnames = {
-#         "start_year": float,
-#         "stop_year": float,
-#         "dtime": float,
-#         "inv_time_constant": float,
-#         "transition_year": float,
-#         "transition_duration": float,
-#         "long_term_emissions": float,
-#         "albedo_with_no_constraint": bool,
-#         "albedo_feedback": bool,
-#         "temp_anomaly_feedback": bool,
-#         "stochastic_C_atm": bool,
-#         "stochastic_c_atm_std_dev": float,
-#         "temp_units": str,
-#         "c_units": str,
-#         "flux_type": str,
-#         "plot_flux_diffs": bool,
-#     }
-
-#     for varname, vartype in varnames.items():
-#         if varname not in input_dict:
-#             continue
-
-#         valstr = input_dict[varname]
-#         if valstr == "":
-#             continue
-
-#         # TODO: this might make us vulnerable to injection code
-#         try:
-#             inputs[varname] = vartype(valstr)
-#         except ValueError:
-#             print(f"Error converting value {varname}={valstr} to {vartype}")
-#     return inputs
-
-# def parse_cambio_inputs_for_units(input_dict: QueryDict) -> dict[str, Any]:
-#     """
-#     Parse the inputs
-#     @param input_dict  A hashmap of the input variable names and their values as strings
-#     @returns  A hashmap of the input variable names and their values as the proper type
-#     """
-
-#     # Default values
-#     inputs = {
-#         "temp_units": "F",  # temp_units"><br> # F, C, or K -->
-#         "carbon_units": "GtC",  # c_units"><br> GtC, GtCO2, atm  -->
-#         "flux_units": "GtC/year",  # flux_type"><br> # total, per year-->
-#     }
-#     varnames = {
-#         "temp_units": str,
-#         "carbon_units": str,
-#         "flux_units": str,
-#     }
-
-#     for varname, vartype in varnames.items():
-#         if varname not in input_dict:
-#             continue
-
-#         valstr = input_dict[varname]
-#         if valstr == "":
-#             continue
-
-#         # TODO: this might make us vulnerable to injection code
-#         try:
-#             inputs[varname] = vartype(valstr)
-#         except ValueError:
-#             print(f"Error converting value {varname}={valstr} to {vartype}")
-#     return inputs
