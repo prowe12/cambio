@@ -127,7 +127,6 @@ def post_peak_flattener(
     @returns neweps
     """
     ipeak = np.where(eps == np.max(eps))[0][0]
-    print("peak", eps[ipeak], ipeak)
     b = eps[ipeak]
     a = epslongterm
     neweps = makeacopy(eps)
