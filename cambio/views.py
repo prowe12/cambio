@@ -257,6 +257,22 @@ def run_model(
     return scenarios
 
 
+def return_same(x):
+    return x
+
+
+def dt_c_to_dt_f(x):
+    return x * 9 / 5
+
+
+def gtc_to_gtco2(x):
+    return x / 0.27
+
+
+def gtc_to_atm(x):
+    return x / 2.12
+
+
 def make_plots(
     scenarios: list[dict[str, NDArray[Any]]],
     scenario_units: dict[str, str],
@@ -290,28 +306,39 @@ def make_plots(
 
     # Loop over variables and create the plots
     plot_divs: list[Any] = []
-    for list_of_names, ylabel in zip(climvarval_selected_names, climvarval_labels):
+    for list_of_names, ylabel, unit in zip(
+        climvarval_selected_names, climvarval_labels, units
+    ):
         names: list[str] = []
         years: list[NDArray[Any]] = []
         climvarvals: list[float | NDArray[Any]] = []
         for i, name in enumerate(list_of_names):
-            unit_name = ""
+            unit_name = unit
             label = name
-            if name == "T_C":  # or name == "T_anomaly":
-                unit_name = scenario_units["temp_units"]
-                label = "T" + " (" + unit_name + ")"
-            else:
-                label += ""
+            conversion_fun = return_same
+            if name in ("C_atm", "C_ocean"):
+                if unit_name == "atm":
+                    conversion_fun = gtc_to_atm
+                elif unit_name == "GtCO2":
+                    conversion_fun = gtc_to_gtco2
 
-            for j, scenario in enumerate(scenarios):
+            elif name == "T_C":
                 if unit_name == "F":
-                    yvals = celsius_to_f(scenario[name])
+                    conversion_fun = celsius_to_f
                 elif unit_name == "K":
-                    yvals = celsius_to_kelvin(scenario[name])
-                elif unit_name == "C":
-                    yvals = scenario[name]
+                    conversion_fun = celsius_to_kelvin
+            elif name == "T_anomaly":
+                if unit_name == "F":
+                    conversion_fun = dt_c_to_dt_f
                 else:
                     yvals = scenario[name]
+            elif name in ("F_ha", "F_la", "F_al", "F_ao", "F_oa"):
+                if unit_name == "GtCO2/year":
+                    conversion_fun = gtc_to_gtco2
+
+            for j, scenario in enumerate(scenarios):
+                yvals = conversion_fun(scenario[name])
+
                 climvarvals.append(yvals)
                 years.append(scenario["year"])
                 names.append(f"Scenario {j}: {label}")
