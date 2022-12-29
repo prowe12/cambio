@@ -11,12 +11,14 @@ from typing import Any
 from django.shortcuts import render
 from plotly.offline import plot
 from plotly.graph_objs import Scatter
+from django.http import HttpRequest, HttpResponse, QueryDict
+from numpy.typing import NDArray
 
 from cambio.utils.cambio import cambio
 from cambio.utils.cambio_utils import celsius_to_f, celsius_to_kelvin
 
 
-def getcolor(i) -> str:
+def getcolor(i: int) -> str:
     """
     Return a a color
     @returns  A string representing a color
@@ -42,29 +44,26 @@ def getcolor(i) -> str:
     return colors[j]
 
 
-def get_scenario_units(request) -> dict[str]:
+def get_scenario_units(request: HttpRequest) -> dict[str, Any]:
     """
     Get the units from the request
     """
     inputs = parse_cambio_inputs_for_units(request.GET)
-    units = {}
+    units: dict[str, Any] = {}
     units["carbon_units"] = inputs["carbon_units"]
     units["flux_units"] = inputs["flux_units"]
     units["temp_units"] = inputs["temp_units"]
-    print()
-    print("units")
-    print(units)
     return units
 
 
-def get_scenario_vars(request, getvars) -> dict[str]:
+def get_scenario_vars(request: HttpRequest, getvars: list[str]) -> dict[str, Any]:
     """
     Get the variables to plot from the request
     @params request  The HttpRequest
     @params getvars  The variables to extract from the request
     """
     inputs = request.GET  # parse_cambio_inputs(request.GET)
-    scenario_vars = {}
+    scenario_vars: dict[str, Any] = {}
     for getvar in getvars:
         if getvar in inputs:
             scenario_vars[getvar] = inputs[getvar]
@@ -185,7 +184,7 @@ def parse_cambio_inputs(input_dict: dict[str, Any]) -> dict[str, Any]:
     return inputs
 
 
-def parse_cambio_inputs_for_units(input_dict: dict[str, Any]) -> dict[str, Any]:
+def parse_cambio_inputs_for_units(input_dict: QueryDict) -> dict[str, Any]:
     """
     Parse the inputs
     @param input_dict  A hashmap of the input variable names and their values as strings
@@ -220,7 +219,9 @@ def parse_cambio_inputs_for_units(input_dict: dict[str, Any]) -> dict[str, Any]:
     return inputs
 
 
-def run_model(scenario_inputs, request) -> list[dict]:
+def run_model(
+    scenario_inputs: list[dict[str, Any]], request: HttpRequest
+) -> list[dict[str, NDArray[Any]]]:
     """
     Run the model for the inputs
     @param scenario_inputs
@@ -236,7 +237,7 @@ def run_model(scenario_inputs, request) -> list[dict]:
         scenario_inputs.append(inputs)
 
     # Run the model
-    scenarios = []
+    scenarios: list[dict[str, NDArray[Any]]] = []
     for scenario_input in scenario_inputs:
         climate, _ = cambio(
             scenario_input["start_year"],
@@ -256,7 +257,13 @@ def run_model(scenario_inputs, request) -> list[dict]:
     return scenarios
 
 
-def make_plots(scenarios, scenario_units, carbon_vars, flux_vars, temp_vars):
+def make_plots(
+    scenarios: list[dict[str, NDArray[Any]]],
+    scenario_units: dict[str, str],
+    carbon_vars: list[str],
+    flux_vars: list[str],
+    temp_vars: list[str],
+) -> tuple[list[Any], list[str]]:
     """
     Return the plots that will be displayed
     @param scenarios  The climate model run results
@@ -282,12 +289,11 @@ def make_plots(scenarios, scenario_units, carbon_vars, flux_vars, temp_vars):
     ]
 
     # Loop over variables and create the plots
-    plot_divs = []
+    plot_divs: list[Any] = []
     for list_of_names, ylabel in zip(climvarval_selected_names, climvarval_labels):
-        climvarvals = [[] for i in range(len(list_of_names))]
-        names = []
-        years = []
-        climvarvals = []
+        names: list[str] = []
+        years: list[NDArray[Any]] = []
+        climvarvals: list[float | NDArray[Any]] = []
         for i, name in enumerate(list_of_names):
             unit_name = ""
             label = name
@@ -336,7 +342,7 @@ def make_plots(scenarios, scenario_units, carbon_vars, flux_vars, temp_vars):
     return plot_divs, units
 
 
-def index(request):
+def index(request: HttpRequest) -> HttpResponse:
     """
     Create the view for the main page
     @param request  The HttpRequest
@@ -364,7 +370,7 @@ def index(request):
     # always plotted: "albedo", "pH"
 
     # Get cambio inputs from cookies
-    cookie_scenarios = [json.loads(value) for input, value in request.COOKIES.items()]
+    cookie_scenarios = [json.loads(value) for value in request.COOKIES.values()]
     cookie_scenarios = list(filter(lambda x: isinstance(x, dict), cookie_scenarios))
     scenario_inputs = [parse_cambio_inputs(scenario) for scenario in cookie_scenarios]
     scenario_units = get_scenario_units(request)
@@ -378,7 +384,11 @@ def index(request):
 
     # Make the plots
     plot_divs, _ = make_plots(
-        scenarios, scenario_units, carbon_vars, flux_vars, temp_vars
+        scenarios,
+        scenario_units,
+        list(carbon_vars.keys()),
+        list(flux_vars.keys()),
+        list(temp_vars.keys()),
     )
     plot_div_stuff = [
         [var_to_plot, plot_div, unit]
