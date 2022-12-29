@@ -67,15 +67,14 @@ def sigmadown(
     return 1 - sigmaup(t_in, transitiontime, transitiontimeinterval)
 
 
-def Diagnose_actual_temperature(T_anomaly: float) -> float:
+def diagnose_actual_temperature(t_anomaly: float) -> float:
     """
     Compute degrees C from a temperature anomaly
 
     @param T_anomaly
     @returns temperature in Celsius
     """
-    T_C = T_anomaly + 14
-    return T_C
+    return t_anomaly + 14
 
 
 def celsius_to_f(temp: float) -> float:
@@ -98,20 +97,17 @@ def celsius_to_kelvin(temp: float) -> float:
     return temp + 273.15
 
 
-def diagnose_degrees_f(T_C: float) -> float:
+def diagnose_degrees_f(temp_c: float) -> float:
     """
     Convert temperature from C to F
 
-    @param T_C
+    @param temp_c
     @returns  temperature in F
     """
     # TODO: check if this is unused, and perhaps delete
 
     # Do the conversion to F
-    T_F = T_C * 9 / 5 + 32  ### END SOLUTION
-
-    # Return the diagnosed temperature in F
-    return T_F
+    return temp_c * 9 / 5 + 32  ### END SOLUTION
 
 
 def post_peak_flattener(
