@@ -28,10 +28,14 @@
 
         <b>Add new climate scenario:</b><br>
         <!--<div id="years" class="climate_variables">-->
-        {% for scenario_input in scenario_inputs %}
+        {% for i, scenario_input in old_scenario_inputs %}
         <details>
-            <summary>See More</summary>
-            This text will be hidden if your browser supports it.
+          <summary>Scenario {{i}}</summary>
+          <ul>
+            {% for name, value in scenario_input.items %}
+              <li> {{name}} = {{value}} </li>
+            {% endfor %}
+          </ul>
         </details>
         {% endfor %}
       
