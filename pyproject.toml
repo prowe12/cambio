@@ -12,6 +12,7 @@ numpy = "^1.24.0"
 
 [tool.poetry.dev-dependencies]
 black = "^22.12.0"
+django-hint = "^0.2.0"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
