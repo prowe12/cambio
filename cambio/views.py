@@ -13,6 +13,7 @@ from plotly.offline import plot
 from plotly.graph_objs import Scatter
 from django.http import HttpRequest, HttpResponse, QueryDict
 from numpy.typing import NDArray
+import numpy as np
 
 from cambio.utils.cambio import cambio
 from cambio.utils.cambio_utils import celsius_to_f, celsius_to_kelvin
@@ -44,9 +45,27 @@ def getcolor(i: int) -> str:
     return colors[j]
 
 
+def get_scenarios_to_plot(request: HttpRequest) -> list[int]:
+    """
+    Get the scenario ids to plot
+    @params request  The HttpRequest
+    @returns The scenario ids to plot
+    """
+    max_scen = 100
+    scenario_ids = [
+        i for i in range(max_scen) if request.GET.get(f"scenario{i}", None) is not None
+    ]
+
+    # if len(scenario_ids) == 0:
+    #     scenario_ids = [0]
+    return scenario_ids
+
+
 def get_scenario_units(request: HttpRequest) -> dict[str, Any]:
     """
     Get the units from the request
+    @params request  The HttpRequest
+    @returns The units
     """
     inputs = parse_cambio_inputs_for_units(request.GET)
     units: dict[str, Any] = {}
@@ -79,6 +98,7 @@ def parse_cambio_inputs_for_cookies(input_dict: dict[str, Any]) -> dict[str, Any
 
     # Default values
     inputs = {
+        "id": 0,
         "start_year": 1750.0,  # <!-- start_year"><br> -->
         "stop_year": 2200.0,  # stop_year"><br> -->
         "dtime": 1.0,  # dtime"><br> time resolution (years) -->
@@ -93,6 +113,7 @@ def parse_cambio_inputs_for_cookies(input_dict: dict[str, Any]) -> dict[str, Any
         "stochastic_c_atm_std_dev": 0.1,  # stochastic_c_atm_std_dev"> <br> -->
     }
     varnames = {
+        "id": int,
         "start_year": float,
         "stop_year": float,
         "dtime": float,
@@ -257,6 +278,38 @@ def run_model(
     return scenarios
 
 
+# def run_model_for_dict(
+#     scenario_inputs: dict[dict[str, Any]]
+# ) -> dict[dict[str, NDArray[Any]]]:
+def run_model_for_dict(scenario_inputs):
+    """
+    Run the model for the inputs
+    @param scenario_inputs
+    @param request
+    @returns Climate model run outputs
+    """
+    # Run the model
+    # scenarios: dict[dict[str, NDArray[Any]]] = {}
+    scenarios = {}
+    for scenario_id, scenario_input in scenario_inputs.items():
+        climate, _ = cambio(
+            scenario_input["start_year"],
+            scenario_input["stop_year"],
+            scenario_input["dtime"],
+            scenario_input["inv_time_constant"],
+            scenario_input["transition_year"],
+            scenario_input["transition_duration"],
+            scenario_input["long_term_emissions"],
+            scenario_input["stochastic_c_atm_std_dev"],
+            scenario_input["albedo_with_no_constraint"],
+            scenario_input["albedo_feedback"],
+            scenario_input["stochastic_C_atm"],
+            scenario_input["temp_anomaly_feedback"],
+        )
+        scenarios[scenario_id] = climate
+    return scenarios
+
+
 def return_same(x):
     return x
 
@@ -306,6 +359,9 @@ def make_plots(
 
     # Loop over variables and create the plots
     plot_divs: list[Any] = []
+    if len(scenarios) == 0:
+        return plot_divs, units
+
     for list_of_names, ylabel, unit in zip(
         climvarval_selected_names, climvarval_labels, units
     ):
@@ -342,7 +398,6 @@ def make_plots(
                 climvarvals.append(yvals)
                 years.append(scenario["year"])
                 names.append(f"Scenario {j}: {label}")
-
         plot_divs.append(
             plot(
                 {
@@ -376,6 +431,8 @@ def index(request: HttpRequest) -> HttpResponse:
     """
 
     # Choices of what to plot
+    scenarios_to_plot = get_scenarios_to_plot(request)
+
     carbon_vars_to_plot = ["C_atm", "C_ocean"]
     flux_vars_to_plot = ["F_ha", "F_ao", "F_oa", "F_la", "F_al"]
     temp_vars_to_plot = ["T_anomaly", "T_C"]
@@ -393,15 +450,38 @@ def index(request: HttpRequest) -> HttpResponse:
         [],
         [],
     ]
-
     # always plotted: "albedo", "pH"
 
     # Get cambio inputs from cookies
     cookie_scenarios = [json.loads(value) for value in request.COOKIES.values()]
     cookie_scenarios = list(filter(lambda x: isinstance(x, dict), cookie_scenarios))
-    scenario_inputs = [
-        parse_cambio_inputs_for_cookies(scenario) for scenario in cookie_scenarios
-    ]
+
+    # Put in hashmap (no duplicates allowed)
+    cookie_scenarios_dict = {}
+    for cookie in cookie_scenarios:
+        cookie_scenarios_dict[cookie["id"]] = cookie
+
+    # scenario_inputs = [
+    #     parse_cambio_inputs_for_cookies(scenario) for scenario in cookie_scenarios
+    # ]
+    scenario_inputs_dict = {}
+    for scenario_id, scenario in cookie_scenarios_dict.items():
+        scenario_inputs_dict[scenario_id] = parse_cambio_inputs_for_cookies(scenario)
+
+    # Get new scenario from get parameters for model run and for saving to cookies
+    # *only* if it exists
+    new_cookie = False
+    new_id = []
+    if "id" in request.GET:
+        inputs = parse_cambio_inputs_for_cookies(request.GET)
+        new_hash = str(hash(json.dumps(inputs)))
+        # if new_hash not in request.COOKIES.keys():
+        #    scenario_inputs.append(inputs)
+        if new_hash not in request.COOKIES.keys():
+            scenario_inputs_dict[inputs["id"]] = inputs
+            new_cookie = True
+            new_id = inputs["id"]
+
     scenario_units = get_scenario_units(request)
     carbon_vars = get_scenario_vars(request, carbon_vars_to_plot)
     flux_vars = get_scenario_vars(request, flux_vars_to_plot)
@@ -409,11 +489,11 @@ def index(request: HttpRequest) -> HttpResponse:
 
     # Run the model on old and new inputs to get the climate model results
     # (Packed into "scenarios")
-    scenarios = run_model(scenario_inputs, request)
+    # scenarios = run_model(scenario_inputs, request)
+    scenarios = run_model_for_dict(scenario_inputs_dict)
 
-    # Make the plots
     plot_divs, _ = make_plots(
-        scenarios,
+        [scenarios[i] for i in scenarios_to_plot],
         scenario_units,
         list(carbon_vars.keys()),
         list(flux_vars.keys()),
@@ -424,20 +504,32 @@ def index(request: HttpRequest) -> HttpResponse:
         for var_to_plot, plot_div, unit in zip(vars_to_plot, plot_divs, units)
     ]
 
+    scenario_ids = list(scenarios.keys())
+    if len(scenario_ids) <= 0:
+        scenario_ids = []
+    elif len(scenario_ids) == 1:
+        pass
+    else:
+        scenario_ids = np.sort(scenario_ids)
+
     # Variables to pass to html
     context = {
         "plot_divs": plot_div_stuff,
         "vars_to_plot": vars_to_plot,
-        "old_scenario_inputs": enumerate(scenario_inputs),
+        "old_scenario_inputs": scenario_inputs_dict,
+        "scenarios": scenario_ids,
     }
+    # "old_scenario_inputs": enumerate(scenario_inputs),
     response = render(request, "cambio/index.html", context)
 
-    # save latest run in cookies
-    scenario = json.dumps(scenario_inputs[-1])
-    scenario_hash = str(hash(scenario))
-    # don't add the new scenario to cookies if it already exists
-    if scenario_hash not in request.COOKIES.keys():
-        response.set_cookie(scenario_hash, scenario)
+    # If there is a new scenario in the get parameters, save it to cookies
+    if new_cookie:
+        scenario = json.dumps(scenario_inputs_dict[new_id])
+        scenario_hash = str(hash(scenario))
+        # don't add the new scenario to cookies if it already exists
+        # (should not be necessary)
+        if scenario_hash not in request.COOKIES.keys():
+            response.set_cookie(scenario_hash, scenario)
 
     return response
 
