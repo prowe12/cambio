@@ -78,7 +78,6 @@ from cambio.utils.climate_params import ClimateParams
 from cambio.utils.cambio_utils import Diagnose_actual_temperature, diagnose_degrees_f
 
 
-
 def cambio(
     start_year: float,
     stop_year: float,
@@ -132,7 +131,7 @@ def cambio(
     # containing the climate state containing preindustrial parameters.
     # We've set the starting year to what was specified above when you
     # created your scenario.
-    #climate_params = preindustrial_inputs.climate_params
+    # climate_params = preindustrial_inputs.climate_params
     climateParams = ClimateParams(stochastic_c_atm_std_dev)
 
     # Propagating through time
@@ -252,7 +251,6 @@ def propagate_climate_state(
     # Ordinary diagnostics
     pH = climateParams.diagnose_ocean_surface_ph(c_atm)
     T_C = Diagnose_actual_temperature(t_anom)
-    # T_F = diagnose_degrees_f(T_C)
 
     # Create a new climate state with these updates
     climatestate: dict[str, float] = {}
@@ -262,7 +260,6 @@ def propagate_climate_state(
     climatestate["T_anomaly"] = t_anom
     climatestate["pH"] = pH
     climatestate["T_C"] = T_C
-    # climatestate["T_F"] = T_F
     climatestate["F_ha"] = F_ha
     climatestate["F_ao"] = F_ao
     climatestate["F_oa"] = F_oa

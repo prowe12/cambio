@@ -2,5 +2,5 @@ from django.apps import AppConfig
 
 
 class CambioConfig(AppConfig):
-    default_auto_field = 'django.db.models.BigAutoField'
-    name = 'cambio'
+    default_auto_field = "django.db.models.BigAutoField"
+    name = "cambio"

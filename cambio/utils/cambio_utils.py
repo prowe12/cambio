@@ -87,6 +87,7 @@ def celsius_to_f(temp: float) -> float:
     """
     return temp * 9 / 5 + 32
 
+
 def celsius_to_kelvin(temp: float) -> float:
     """
     Convert temperature from C to K
@@ -95,6 +96,7 @@ def celsius_to_kelvin(temp: float) -> float:
     @returns  temperature in K
     """
     return temp + 273.15
+
 
 def diagnose_degrees_f(T_C: float) -> float:
     """
