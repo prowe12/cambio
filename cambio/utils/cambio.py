@@ -67,45 +67,35 @@
 #    - constraint on how fast Earth's albedo can change
 
 
-from typing import Any
 import numpy as np
-import numpy.typing as npt
+from cambio.utils.models import CambioInputs
 
 
 from cambio.utils.cambio_utils import make_emissions_scenario_lte, is_same
 from cambio.utils.climate_params import ClimateParams
 from cambio.utils.preindustrial_inputs import preindustrial_inputs
-from cambio.utils.cambio_utils import diagnose_actual_temperature, diagnose_degrees_f
+from cambio.utils.cambio_utils import diagnose_actual_temperature
+from cambio.utils.cambio_utils import CambioVar
 
 
-def cambio(
-    start_year: float,
-    stop_year: float,
-    dtime: float,
-    inv_time_constant: float,
-    transition_year: float,
-    transition_duration: float,
-    long_term_emissions: float,
-    stochastic_c_atm_std_dev: float,
-    albedo_with_no_constraint: bool,
-    albedo_feedback: bool,
-    stochastic_c_atm: bool,
-    temp_anomaly_feedback: bool,
-):
+def cambio(inputs: CambioInputs) -> tuple[dict[str, CambioVar], dict[str, float]]:
+    # TODO: improve this docstring
     """
-    start_year = 1750.0
-    stop_year = 2200.0
-    dtime = 1.0  # time resolution (years)
-    inv_time_constant = 0.025
-    transition_year = 2040.0  # pivot year to start decreasing CO2
-    transition_duration = 20.0  # years over which to decrease co2
-    long_term_emissions = 2.0  # ongoing carbon emissions after decarbonization
-    # For feedbacks and stochastic runs
-    stochastic_c_atm_std_dev = 0.1
-    albedo_with_no_constraint = False
-    albedo_feedback = False
-    stochastic_c_atm = False
-    temp_anomaly_feedback = False
+    Run the cambio model
+
+    @param start_year
+    @param stop_year
+    @param dtime = 1.0  time resolution (years)
+    @param inv_time_constant
+    @param transition_year = 2040.0  pivot year to start decreasing CO2
+    @param transition_duration = 20.0  years over which to decrease co2
+    @param long_term_emissions = 2.0  ongoing carbon emissions after decarbonization
+    @param For feedbacks and stochastic runs
+    @param stochastic_c_atm_std_dev
+    @param albedo_with_no_constraint = False
+    @param albedo_feedback = False
+    @param stochastic_c_atm = False
+    @param temp_anomaly_feedback = False
     """
 
     # Units of variables output by climate model:
@@ -118,13 +108,13 @@ def cambio(
     # flux_human_atm is in GtC/year
     # would be good to output units
     time, flux_human_atm = make_emissions_scenario_lte(
-        start_year,
-        stop_year,
-        dtime,
-        inv_time_constant,
-        transition_year,
-        transition_duration,
-        long_term_emissions,
+        inputs.start_year,
+        inputs.stop_year,
+        inputs.dtime,
+        inputs.inv_time_constant,
+        inputs.transition_year,
+        inputs.transition_duration,
+        inputs.long_term_emissions,
     )
 
     # ### Creating a preindustrial Climate State
@@ -132,7 +122,7 @@ def cambio(
     # We've set the starting year to what was specified above when you
     # created your scenario.
     climate_params = preindustrial_inputs()
-    climateParams = ClimateParams(stochastic_c_atm_std_dev)
+    climateParams = ClimateParams(inputs.stochastic_c_atm_std_dev)
 
     # Propagating through time
 
@@ -152,11 +142,11 @@ def cambio(
     climatestate["F_oa"] = 0
     climatestate["F_al"] = 0
     climatestate["F_la"] = 0
-    climatestate["year"] = time[0] - dtime
+    climatestate["year"] = time[0] - inputs.dtime
 
     # Initialize the dictionary that will hold the time series
     ntimes = len(time)
-    climate: dict[str, npt.NDArray[Any]] = {}
+    climate: dict[str, CambioVar] = {}
     for key in climatestate:
         climate[key] = np.zeros(ntimes)
 
@@ -167,12 +157,12 @@ def cambio(
         climatestate = propagate_climate_state(
             climatestate,
             climateParams,
-            dtime,
+            inputs.dtime,
             flux_human_atm[i],
-            albedo_with_no_constraint,
-            albedo_feedback,
-            stochastic_c_atm,
-            temp_anomaly_feedback,
+            inputs.albedo_with_no_constraint,
+            inputs.albedo_feedback,
+            inputs.stochastic_C_atm,
+            inputs.temp_anomaly_feedback,
         )
 
         # Append to climate variables

@@ -14,7 +14,10 @@ import numpy as np
 import numpy.typing as npt
 
 
-def is_same(arr1: npt.NDArray[Any], arr2: npt.NDArray[Any]) -> bool:
+CambioVar = npt.NDArray[np.float64]
+
+
+def is_same(arr1: CambioVar, arr2: CambioVar) -> bool:
     """
     Throw an error if the two arrays are not the same
 
@@ -41,8 +44,8 @@ def sigmafloor(
 
 
 def sigmaup(
-    t_in: float | npt.NDArray[Any], transitiontime: float, transitiontimeinterval: float
-) -> npt.NDArray[Any]:
+    t_in: float | CambioVar, transitiontime: float, transitiontimeinterval: float
+) -> CambioVar:
     """
     Generate a sigmoid (smooth step-up) function
 
@@ -55,8 +58,8 @@ def sigmaup(
 
 
 def sigmadown(
-    t_in: float | npt.NDArray[Any], transitiontime: float, transitiontimeinterval: float
-) -> npt.NDArray[Any]:
+    t_in: float | CambioVar, transitiontime: float, transitiontimeinterval: float
+) -> CambioVar:
     """
     Generate a sigmoid (smooth step-down) function
 
@@ -111,11 +114,11 @@ def diagnose_degrees_f(temp_c: float) -> float:
 
 
 def post_peak_flattener(
-    time: npt.NDArray[Any],
-    eps: npt.NDArray[Any],
+    time: CambioVar,
+    eps: CambioVar,
     transitiontimeinterval: float,
     epslongterm: float,
-) -> npt.NDArray[Any]:
+) -> CambioVar:
     """
     Flatten the post peak
 
@@ -135,11 +138,11 @@ def post_peak_flattener(
 
 
 def make_emissions_scenario(
-    time: npt.NDArray[Any],
+    time: CambioVar,
     inv_t_const: float,
     transitionyear: float,
     transitionduration: float,
-) -> npt.NDArray[Any]:
+) -> CambioVar:
     """
     Make the emissions scenario
 
@@ -162,8 +165,8 @@ def make_emissions_scenario(
 
 
 def make_emissions_scenario2(
-    time: npt.NDArray[Any], k: float, t_peak: float, delta_t_trans: float
-) -> npt.NDArray[Any]:
+    time: CambioVar, k: float, t_peak: float, delta_t_trans: float
+) -> CambioVar:
     """
     Returns an emissions scenario parameterized by the year of peak emissions
     @param time
@@ -189,7 +192,7 @@ def make_emissions_scenario_lte(
     t_peak: float,
     delta_t: float,
     epslongterm: float,
-) -> tuple[npt.NDArray[Any], npt.NDArray[Any]]:
+) -> tuple[CambioVar, CambioVar]:
     """
     Make emissions scenario with long term emissions
 

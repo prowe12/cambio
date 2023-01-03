@@ -7,7 +7,8 @@ Created on Wed Dec 21 16:16:15 2022
 """
 
 
-def preindustrial_inputs() -> dict:
+def preindustrial_inputs() -> dict[str, float]:
+    # TODO: consider moving these preindustrial inputs to a different location, perhaps a config file?
     """
     Create a dictionary with the preindustrial inputs
     @returns  The preindustrial inputs

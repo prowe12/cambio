@@ -12,7 +12,8 @@ from django.http import QueryDict
 from numpy.typing import NDArray
 
 from cambio.utils.cambio import cambio
-from cambio.utils.cambio_utils import celsius_to_f, celsius_to_kelvin
+from cambio.utils.models import CambioInputs
+from cambio.utils.cambio_utils import CambioVar, celsius_to_f, celsius_to_kelvin
 
 
 def getcolor(i: int) -> str:
@@ -77,10 +78,10 @@ def parse_inputs(
 
 # def run_model_for_dict(
 #     scenario_inputs: dict[dict[str, Any]]
-# ) -> dict[dict[str, NDArray[Any]]]:
+# ) -> dict[dict[str, CambioVar]]:
 def run_model_for_dict(
-    scenario_inputs: dict[str, dict[str, Any]]
-) -> dict[str, dict[str, NDArray[Any]]]:
+    scenario_inputs: dict[str, CambioInputs]
+) -> dict[str, dict[str, CambioVar]]:
     """
     Run the model for the inputs
     @param scenario_inputs
@@ -88,23 +89,10 @@ def run_model_for_dict(
     @returns Climate model run outputs
     """
     # Run the model
-    # scenarios: dict[dict[str, NDArray[Any]]] = {}
-    scenarios: dict[str, dict[str, NDArray[Any]]] = {}
+    # scenarios: dict[dict[str, CambioVar]] = {}
+    scenarios: dict[str, dict[str, CambioVar]] = {}
     for scenario_id, scenario_input in scenario_inputs.items():
-        climate, _ = cambio(
-            scenario_input["start_year"],
-            scenario_input["stop_year"],
-            scenario_input["dtime"],
-            scenario_input["inv_time_constant"],
-            scenario_input["transition_year"],
-            scenario_input["transition_duration"],
-            scenario_input["long_term_emissions"],
-            scenario_input["stochastic_c_atm_std_dev"],
-            scenario_input["albedo_with_no_constraint"],
-            scenario_input["albedo_feedback"],
-            scenario_input["stochastic_C_atm"],
-            scenario_input["temp_anomaly_feedback"],
-        )
+        climate, _ = cambio(scenario_input)
         scenarios[scenario_id] = climate
     return scenarios
 
@@ -126,7 +114,7 @@ def gtc_to_atm(x: float) -> float:
 
 
 def make_plots(
-    scenarios: list[dict[str, NDArray[Any]]],
+    scenarios: list[dict[str, CambioVar]],
     scenario_units: dict[str, str],
     carbon_vars: list[str],
     flux_vars: list[str],
@@ -165,8 +153,8 @@ def make_plots(
         climvarval_selected_names, climvarval_labels, units
     ):
         names: list[str] = []
-        years: list[NDArray[Any]] = []
-        climvarvals: list[float | NDArray[Any]] = []
+        years: list[CambioVar] = []
+        climvarvals: list[float | CambioVar] = []
         for name in list_of_names:
             unit_name = unit
             label = name
