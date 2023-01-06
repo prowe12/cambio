@@ -3,10 +3,7 @@ from django.http import QueryDict
 from pydantic import BaseModel
 
 
-class CambioInputs(BaseModel):
-    start_year: float = 1750.0
-    stop_year: float = 2200.0
-    dtime: float = 1.0
+class BaseInputs(BaseModel):
     inv_time_constant: float = 0.025
     transition_year: float = 2040.0
     transition_duration: float = 20.0
@@ -32,7 +29,13 @@ class CambioInputs(BaseModel):
         return cls.from_dict(input_dict)
 
 
-class ScenarioInputs(CambioInputs):
+class CambioInputs(BaseInputs):
+    start_year: float = 1750.0
+    stop_year: float = 2200.0
+    dtime: float = 1.0
+
+
+class ScenarioInputs(BaseInputs):
     """
     Model listing attributes users need to specify for each scenario.
     """

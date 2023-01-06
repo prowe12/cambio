@@ -163,12 +163,16 @@ def index(request: HttpRequest) -> HttpResponse:
 
     scenario_ids = list(scenarios.keys())
     plot_scenarios = [f"plot_scenario{scenario_id}" for scenario_id in scenario_ids]
+    old_scenario_inputs = {
+        scenario_id: scenario.dict()
+        for scenario_id, scenario in scenario_inputs.items()
+    }
 
     # Variables to pass to html
     context = {
         "plot_divs": plot_div_stuff,
         "vars_to_plot": vars_to_plot,
-        "old_scenario_inputs": scenario_inputs,
+        "old_scenario_inputs": old_scenario_inputs,
         "scenarios": scenario_ids,
         "plot_scenarios": plot_scenarios,
         "inputs": ScenarioInputs().dict(),
