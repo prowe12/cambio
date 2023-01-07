@@ -11,12 +11,6 @@ from typing import Any
 from django.shortcuts import render
 from django.http import HttpRequest, HttpResponse
 
-# from plotly.offline import plot
-# from plotly.graph_objs import Scatter
-# from numpy.typing import NDArray
-
-# from cambio.utils.cambio import cambio
-# from cambio.utils.cambio_utils import celsius_to_f, celsius_to_kelvin
 from cambio.utils.view_utils import (
     parse_inputs,
     run_model_for_dict,
@@ -101,15 +95,7 @@ def index(request: HttpRequest) -> HttpResponse:
         temp_vars_to_plot,
         [],
         [],
-    ]  # , ['pH'], ['albedo']]
-
-    # units = [
-    #     [["carbon_units", "GtC", 1], ["carbon_units", "atm", 0]],
-    #     [["flux_units", "GtC", 1], ["flux_units", "GtCO2", 0]],
-    #     [["temp_units", "C", 1], ["temp_units", "K", 0], ["temp_units", "F", 0]],
-    #     [],
-    #     [],
-    # ]
+    ]
     # # # # # # # # # # # # # # # # # # # # # # #
 
     # Get variables from request:
@@ -119,9 +105,6 @@ def index(request: HttpRequest) -> HttpResponse:
     carbon_vars = get_scenario_vars(request, carbon_vars_to_plot)
     flux_vars = get_scenario_vars(request, flux_vars_to_plot)
     temp_vars = get_scenario_vars(request, temp_vars_to_plot)
-
-    print("scenario units")
-    print(scenario_units)
 
     plot_div_stuff = {
         "carbon": {
@@ -161,13 +144,6 @@ def index(request: HttpRequest) -> HttpResponse:
         },
     }
 
-    print("")
-    print("")
-    print("scenario_units")
-    print(scenario_units)
-    print("")
-    print("")
-
     # Replace the default plotting variables with the get params
     if any(carbon_vars):
         plot_div_stuff["carbon"]["selected_vars"] = carbon_vars
@@ -179,10 +155,6 @@ def index(request: HttpRequest) -> HttpResponse:
     plot_div_stuff["carbon"]["selected_unit"] = scenario_units["carbon"]
     plot_div_stuff["flux"]["selected_unit"] = scenario_units["flux"]
     plot_div_stuff["temp"]["selected_unit"] = scenario_units["temp"]
-
-    print("")
-    print("flux units")
-    print(scenario_units["flux"])
 
     # Get cambio inputs from cookies
     scenario_inputs: dict[str, CambioInputs] = {
