@@ -12,7 +12,7 @@ from django.http import QueryDict
 from numpy.typing import NDArray
 
 from cambio.utils.cambio import cambio
-from cambio.utils.models import CambioInputs
+from cambio.utils.scenarios import CambioInputs
 from cambio.utils.cambio_utils import CambioVar, celsius_to_f, celsius_to_kelvin
 
 
@@ -113,6 +113,25 @@ def gtc_to_atm(x: float) -> float:
     return x / 2.12
 
 
+# class MakePlots:
+#     """
+#     Make the plots, depending on user-specified variables and units.
+#     Use defaults when not specified
+#     """
+
+#     def __init__(self):
+#         self.carbon_vars_to_plot = ["C_atm", "C_ocean"]
+#         self.flux_vars_to_plot = ["F_ha", "F_ao", "F_oa", "F_la", "F_al"]
+#         self.temp_vars_to_plot = ["T_anomaly", "T_C"]
+#         self.vars_to_plot = [
+#             carbon_vars_to_plot,
+#             flux_vars_to_plot,
+#             temp_vars_to_plot,
+#             [],
+#             [],
+#         ]  # , ['pH'], ['albedo']]
+
+
 def make_plots(
     scenarios: list[dict[str, CambioVar]],
     scenario_units: dict[str, str],
@@ -137,9 +156,9 @@ def make_plots(
     climvarval_selected_names = [carbon_vars, flux_vars, temp_vars, ["pH"], ["albedo"]]
     climvarval_labels = ["Carbon amount", "Flux", "Temperature", "pH", "albedo"]
     units = [
-        scenario_units["carbon_units"],
-        scenario_units["flux_units"],
-        scenario_units["temp_units"],
+        scenario_units["carbon"],
+        scenario_units["flux"],
+        scenario_units["temp"],
         "",
         "",
     ]

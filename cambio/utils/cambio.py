@@ -68,7 +68,7 @@
 
 
 import numpy as np
-from cambio.utils.models import CambioInputs
+from cambio.utils.scenarios import CambioInputs
 
 
 from cambio.utils.cambio_utils import make_emissions_scenario_lte, is_same

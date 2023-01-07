@@ -22,7 +22,7 @@ from cambio.utils.view_utils import (
     run_model_for_dict,
     make_plots,
 )
-from cambio.utils.models import CambioInputs, ScenarioInputs
+from cambio.utils.scenarios import CambioInputs, ScenarioInputs
 
 
 def get_scenarios(request: HttpRequest, get_prefix: str) -> list[str]:
@@ -82,14 +82,14 @@ def index(request: HttpRequest) -> HttpResponse:
 
     # Default values
     unit_defaults = {
-        "temp_units": "F",  # temp_units"><br> # F, C, or K -->
-        "carbon_units": "GtC",  # c_units"><br> GtC, GtCO2, atm  -->
-        "flux_units": "GtC/year",  # flux_type"><br> # total, per year-->
+        "temp": "C",  # temp_units"><br> # F, C, or K -->
+        "carbon": "GtC",  # c_units"><br> GtC, GtCO2, atm  -->
+        "flux": "GtC/year",  # flux_type"><br> # total, per year-->
     }
     unit_types = {
-        "temp_units": str,
-        "carbon_units": str,
-        "flux_units": str,
+        "temp": str,
+        "carbon": str,
+        "flux": str,
     }
 
     carbon_vars_to_plot = ["C_atm", "C_ocean"]
@@ -102,14 +102,14 @@ def index(request: HttpRequest) -> HttpResponse:
         [],
         [],
     ]  # , ['pH'], ['albedo']]
-    units = [
-        [["carbon_units", "GtC"], ["carbon_units", "atm"]],
-        [["flux_units", "GtC"], ["flux_units", "GtCO2"]],
-        [["temp_units", "C"], ["temp_units", "K"], ["temp_units", "F"]],
-        [],
-        [],
-    ]
-    # always plotted: "albedo", "pH"
+
+    # units = [
+    #     [["carbon_units", "GtC", 1], ["carbon_units", "atm", 0]],
+    #     [["flux_units", "GtC", 1], ["flux_units", "GtCO2", 0]],
+    #     [["temp_units", "C", 1], ["temp_units", "K", 0], ["temp_units", "F", 0]],
+    #     [],
+    #     [],
+    # ]
     # # # # # # # # # # # # # # # # # # # # # # #
 
     # Get variables from request:
@@ -119,6 +119,70 @@ def index(request: HttpRequest) -> HttpResponse:
     carbon_vars = get_scenario_vars(request, carbon_vars_to_plot)
     flux_vars = get_scenario_vars(request, flux_vars_to_plot)
     temp_vars = get_scenario_vars(request, temp_vars_to_plot)
+
+    print("scenario units")
+    print(scenario_units)
+
+    plot_div_stuff = {
+        "carbon": {
+            "plot": [],
+            "vars": ["C_atm", "C_ocean"],
+            "units": ["GtC", "atm"],
+            "selected_vars": ["C_atm"],
+            "selected_unit": "GtC",
+        },
+        "flux": {
+            "plot": [],
+            "vars": ["F_ha", "F_ao", "F_oa", "F_la", "F_al"],
+            "units": ["GtC/year", "GtCO2/year"],
+            "selected_vars": ["F_ha"],
+            "selected_unit": "GtC/year",
+        },
+        "temp": {
+            "plot": [],
+            "vars": ["T_anomaly", "T_C"],
+            "units": ["C", "K", "F"],
+            "selected_vars": ["T_anomaly"],
+            "selected_unit": "C",
+        },
+        "pH": {
+            "plot": [],
+            "vars": [],
+            "units": [],
+            "selected_vars": [],
+            "selected_units": [],
+        },
+        "albedo": {
+            "plot": [],
+            "albedo": ["albedo"],
+            "units": [],
+            "selected_vars": [],
+            "selected_units": [],
+        },
+    }
+
+    print("")
+    print("")
+    print("scenario_units")
+    print(scenario_units)
+    print("")
+    print("")
+
+    # Replace the default plotting variables with the get params
+    if any(carbon_vars):
+        plot_div_stuff["carbon"]["selected_vars"] = carbon_vars
+    if any(flux_vars):
+        plot_div_stuff["flux"]["selected_vars"] = flux_vars
+    if any(temp_vars):
+        plot_div_stuff["temp"]["selected_vars"] = temp_vars
+
+    plot_div_stuff["carbon"]["selected_unit"] = scenario_units["carbon"]
+    plot_div_stuff["flux"]["selected_unit"] = scenario_units["flux"]
+    plot_div_stuff["temp"]["selected_unit"] = scenario_units["temp"]
+
+    print("")
+    print("flux units")
+    print(scenario_units["flux"])
 
     # Get cambio inputs from cookies
     scenario_inputs: dict[str, CambioInputs] = {
@@ -156,10 +220,12 @@ def index(request: HttpRequest) -> HttpResponse:
         list(flux_vars.keys()),
         list(temp_vars.keys()),
     )
-    plot_div_stuff = [
-        [var_to_plot, plot_div, unit]
-        for var_to_plot, plot_div, unit in zip(vars_to_plot, plot_divs, units)
-    ]
+    if len(plot_divs) > 0:
+        plot_div_stuff["carbon"]["plot"] = plot_divs[0]
+        plot_div_stuff["flux"]["plot"] = plot_divs[1]
+        plot_div_stuff["temp"]["plot"] = plot_divs[2]
+        plot_div_stuff["pH"]["plot"] = plot_divs[3]
+        plot_div_stuff["albedo"]["plot"] = plot_divs[4]
 
     scenario_ids = list(scenarios.keys())
     plot_scenarios = [f"plot_scenario{scenario_id}" for scenario_id in scenario_ids]
