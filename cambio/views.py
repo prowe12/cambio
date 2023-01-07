@@ -10,7 +10,6 @@ import json
 from typing import Any
 from django.shortcuts import render
 from django.http import HttpRequest, HttpResponse
-import numpy as np
 
 # from plotly.offline import plot
 # from plotly.graph_objs import Scatter
@@ -23,6 +22,7 @@ from cambio.utils.view_utils import (
     run_model_for_dict,
     make_plots,
 )
+from cambio.utils.models import CambioInputs, ScenarioInputs
 
 
 def get_scenarios(request: HttpRequest, get_prefix: str) -> list[str]:
@@ -80,39 +80,6 @@ def index(request: HttpRequest) -> HttpResponse:
     @param request  The HttpRequest
     """
 
-    # # # # # #     Constants    # # # # # # # # # #
-    # Default values
-    model_run_default_inputs = {
-        "id": "0",
-        "start_year": 1750.0,  # <!-- start_year"><br> -->
-        "stop_year": 2200.0,  # stop_year"><br> -->
-        "dtime": 1.0,  # dtime"><br> time resolution (years) -->
-        "inv_time_constant": 0.025,  # inv_time_constant"><br> -->
-        "transition_year": 2040.0,  # transition_year"><br> # year to start decreasing CO2 -->
-        "transition_duration": 20.0,  # transition_duration"><br> years over which to decrease co2  -->
-        "long_term_emissions": 2.0,  # long_term_emissions"><br> # ongoing carbon emissions after decarbonization  -->
-        "albedo_with_no_constraint": False,  # albedo_with_no_constraint"><br> -->
-        "albedo_feedback": False,  # albedo_feedback"><br> -->
-        "temp_anomaly_feedback": False,  # temp_anomaly_feedback"><br> -->
-        "stochastic_C_atm": False,  # stochastic_C_atm"><br> -->
-        "stochastic_c_atm_std_dev": 0.1,  # stochastic_c_atm_std_dev"> <br> -->
-    }
-    model_run_default_types = {
-        "id": str,
-        "start_year": float,
-        "stop_year": float,
-        "dtime": float,
-        "inv_time_constant": float,
-        "transition_year": float,
-        "transition_duration": float,
-        "long_term_emissions": float,
-        "albedo_with_no_constraint": bool,
-        "albedo_feedback": bool,
-        "temp_anomaly_feedback": bool,
-        "stochastic_C_atm": bool,
-        "stochastic_c_atm_std_dev": float,
-    }
-
     # Default values
     unit_defaults = {
         "temp_units": "F",  # temp_units"><br> # F, C, or K -->
@@ -154,30 +121,16 @@ def index(request: HttpRequest) -> HttpResponse:
     temp_vars = get_scenario_vars(request, temp_vars_to_plot)
 
     # Get cambio inputs from cookies
-
-    scenario_inputs_raw = {
-        scenario_id: json.loads(value) for scenario_id, value in request.COOKIES.items()
+    scenario_inputs: dict[str, CambioInputs] = {
+        scenario_id: CambioInputs.from_json(scenario)
+        for scenario_id, scenario in request.COOKIES.items()
     }
-    scenario_inputs: dict[str, dict[str, Any]] = {}
-    for scenario_id, scenario in scenario_inputs_raw.items():
 
-        parsed = parse_inputs(
-            scenario, model_run_default_inputs, model_run_default_types
-        )
-        scenario_inputs[scenario_id] = parsed
-
-    # Get new scenario from get parameters for model run and for saving to cookies
+    # Get new inputs from get parameters for model run and for saving to cookies
     # *only* if it exists
-    new_cookie = False
-    new_scenario_id = ""
-    if "id" in request.GET and request.GET["id"]:
-        inputs = parse_inputs(
-            request.GET, model_run_default_inputs, model_run_default_types
-        )
-
-        new_scenario_id = inputs["id"]
-        scenario_inputs[new_scenario_id] = inputs
-        new_cookie = True
+    new_scenario_id = request.GET.get("id", "")
+    if new_scenario_id != "":
+        scenario_inputs[new_scenario_id] = CambioInputs.from_dict(request.GET)
 
     # remove all scenarios that are scheduled to be deleted
     scenario_inputs = {
@@ -210,22 +163,26 @@ def index(request: HttpRequest) -> HttpResponse:
 
     scenario_ids = list(scenarios.keys())
     plot_scenarios = [f"plot_scenario{scenario_id}" for scenario_id in scenario_ids]
+    old_scenario_inputs = {
+        scenario_id: scenario.dict()
+        for scenario_id, scenario in scenario_inputs.items()
+    }
 
     # Variables to pass to html
     context = {
         "plot_divs": plot_div_stuff,
         "vars_to_plot": vars_to_plot,
-        "old_scenario_inputs": scenario_inputs,
+        "old_scenario_inputs": old_scenario_inputs,
         "scenarios": scenario_ids,
         "plot_scenarios": plot_scenarios,
-        "inputs": model_run_default_inputs,
+        "inputs": ScenarioInputs().dict(),
     }
     # "old_scenario_inputs": enumerate(scenario_inputs),
     response = render(request, "cambio/index.html", context)
 
     # If there is a new scenario in the get parameters, save it to cookies
-    if new_cookie:
-        scenario = json.dumps(scenario_inputs[new_scenario_id])
+    if new_scenario_id != "":
+        scenario = scenario_inputs[new_scenario_id].json()
         response.set_cookie(new_scenario_id, scenario)
 
     # delete all unwanted scenarios:
