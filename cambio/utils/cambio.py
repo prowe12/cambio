@@ -1,3 +1,9 @@
+"""
+Code and algorithms written by Steven Neshyba
+Refactored for wep app By Penny Rowe and Daniel Neshyba-Rowe
+2022/12/21
+
+"""
 #!/usr/bin/env python
 # coding: utf-8
 
@@ -68,7 +74,7 @@
 
 
 import numpy as np
-from cambio.utils.scenarios import CambioInputs
+from cambio.utils.schemas import CambioInputs
 
 
 from cambio.utils.cambio_utils import make_emissions_scenario_lte, is_same

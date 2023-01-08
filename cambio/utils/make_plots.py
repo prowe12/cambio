@@ -2,7 +2,6 @@
 By Penny Rowe and Daniel Neshyba-Rowe
 2022/12/21
 
-Based on Benchly, by Ben Gamble, Charlie Dahl, and Penny Rowe
 """
 
 from typing import Any

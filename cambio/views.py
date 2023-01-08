@@ -17,7 +17,7 @@ from cambio.utils.view_utils import (
 
 #    make_plots,
 from cambio.utils.make_plots import MakePlots
-from cambio.utils.scenarios import CambioInputs, ScenarioInputs
+from cambio.utils.schemas import CambioInputs, ScenarioInputs
 
 
 def get_scenarios(request: HttpRequest, get_prefix: str) -> list[str]:
