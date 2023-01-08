@@ -42,7 +42,7 @@ def index(request: HttpRequest) -> HttpResponse:
     """
 
     # Get variables from request:
-    scenarios_ids_to_plot = get_scenarios(request, "plot_scenario")
+    scenarios_ids_to_plot = get_scenarios(request, "plot_scenario_")
     scenarios_ids_to_delete = get_scenarios(request, "del_scenario")
 
     # Get variables from request for use in plots
@@ -56,7 +56,7 @@ def index(request: HttpRequest) -> HttpResponse:
 
     # Get new scenario from get parameters for model run and for saving to cookies
     # *only* if it exists
-    new_scenario_id = request.GET.get("id", "")
+    new_scenario_id = request.GET.get("scenario_name", "")
     if new_scenario_id != "":
         scenario_inputs[new_scenario_id] = CambioInputs.from_dict(request.GET)
 
@@ -81,7 +81,9 @@ def index(request: HttpRequest) -> HttpResponse:
     plot_divs = makePlots.make(scenarios_to_plot)
 
     scenario_ids = list(scenarios.keys())
-    plot_scenarios = [f"plot_scenario{scenario_id}" for scenario_id in scenario_ids]
+    plot_scenarios = [
+        [scenario_id, f"plot_scenario_{scenario_id}"] for scenario_id in scenario_ids
+    ]
     old_scenario_inputs = {
         scenario_id: scenario.dict()
         for scenario_id, scenario in scenario_inputs.items()

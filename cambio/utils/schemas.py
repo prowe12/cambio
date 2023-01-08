@@ -57,7 +57,7 @@ class ScenarioInputs(BaseInputs):
     Model listing attributes users need to specify for each scenario.
     """
 
-    id: str = "0"
+    scenario_name: str = "Default"
 
 
 def clean_dict(input_dict: dict[str, str] | QueryDict) -> dict[str, str]:
