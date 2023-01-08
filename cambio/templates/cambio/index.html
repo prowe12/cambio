@@ -39,7 +39,7 @@
         <br>
         <!--Allow user to add a new scenario-->
         <b>Add new climate scenario:</b><br>
-        {% for inp,dflt in inputs.items %}
+        {% for inp, dflt in inputs.items %}
           <label for="{{inp}}">{{inp}}</label>
           <input type="text" placeholder="{{dflt}}" id="{{inp}}" name="{{inp}}"><br>
         {% endfor %}
@@ -66,6 +66,7 @@
       <div id="climate-variables-top" class="climate_variables">
         <b>Scenarios to plot</b>
         <div>
+          <!-- Checkboxes for variables to plot -->
           {% for plot_scenario in plot_scenarios %}
             {% if plot_scenario in request.GET %}
               <input type="checkbox" id="{{plot_scenario}}" name="{{plot_scenario}}" value="on" checked>
@@ -83,14 +84,14 @@
         <!-- Time series plots -->
         {% autoescape off %}
         {% for name, values in plot_divs.items %}
-          <!-- Check boxes for variables to plot -->
-          {% for inp in values.vars %}
+          <!-- Checkboxes for variables to plot -->
+          {% for inp, disp in values.vars.items %}
             {% if inp in values.selected_vars %}
               <input type="checkbox" id="{{inp}}" name="{{inp}}" value="on" checked>
             {% else %}
               <input type="checkbox" id="{{inp}}" name="{{inp}}" value="on">
             {% endif %}
-            <label for="{{inp}}">{{inp}}</label>
+            <label for="{{inp}}">{{disp}}</label>
         {% endfor %}
         <br>
         <!-- Radio buttons for units to plot -->

@@ -38,11 +38,11 @@ class ClimateParams:
 
     # Parameters for albedo feedback
     # Based on our radiative balance sensitivity analysis
-    albedo_sensitivity = -100
+    albedo_sensitivity = -100.0
     # T at which significant albedo reduction kicks in (a guess)
-    albedo_transition_temperature = 4
+    albedo_transition_temperature = 2.0
     # Temperature range over which albedo reduction kicks in (a guess)
-    albedo_transition_interval = 1
+    albedo_transition_interval = 1.0
     # Amount albedo can change in a year (based on measurements)
     max_albedo_change_rate = 0.0006
     # Maximum of 10% reduction in albedo (a guess)
@@ -50,9 +50,9 @@ class ClimateParams:
 
     # Parameters for the atmosphere->land flux feedback
     # T anomaly at which photosynthesis will become impaired (a guess)
-    flux_al_transition_temp = 4
+    flux_al_transition_temp = 2.5
     # Temperature range over which photosynthesis impairment kicks in (guess)
-    flux_al_transition_temp_interval = 1
+    flux_al_transition_temp_interval = 1.0
     # Maximum of 10% reduction in F_al (a guess)
     fractional_flux_al_floor = 0.9
 

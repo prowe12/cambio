@@ -166,8 +166,8 @@ def cambio(inputs: CambioInputs) -> tuple[dict[str, CambioVar], dict[str, float]
         )
 
         # Append to climate variables
-        for key in climatestate:
-            climate[key][i] = climatestate[key]
+        for key, value in climatestate.items():
+            climate[key][i] = value
 
     # QC: make sure the input and output times and human co2 emissions are same
     if not is_same(time, climate["year"]):
