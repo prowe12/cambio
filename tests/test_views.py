@@ -10,10 +10,8 @@ class SampleTestCase(TestCase):
     """
 
     def setUp(self):
-        print("In setUp")
+        self.myvar = 3
 
     def test_sample(self):
         """Sample test"""
-        print("In test")
-        my_var = 3
-        self.assertEqual(my_var, 3)
+        self.assertEqual(self.myvar, 3)

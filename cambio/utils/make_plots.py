@@ -24,6 +24,8 @@ class MakePlots:
         """
         Replace default inputs to CAMBIO with user-defined values
         """
+        self.year_range = (1900.0, 2201.0)  # Year range to plot
+
         inputs = clean_inputs(inputs)
 
         conversion_funs_general = {
@@ -155,8 +157,8 @@ class MakePlots:
                     yvals = conversion_fun(scenario[name])
                     inds = get_years_to_plot(year, self.year_range)
 
-                    years.append(year)
-                    climvarvals.append(yvals)
+                    years.append(year[inds])
+                    climvarvals.append(yvals[inds])
                     legend_labels.append(f"{scenario_id}: {label}")
             # Set all the plots for this panel
             values["plot"] = self.plot_panel(years, climvarvals, legend_labels, ylabel)
@@ -228,7 +230,7 @@ def get_years_to_plot(
     @param year_range  First and last year of range to plot
     @returns  Indices to years that will be plotted
     """
-    return np.where(np.logical_and(year > year_range[0]), year < year_range[1])[0]
+    return np.where((year >= year_range[0]) & (year <= year_range[1]))[0]
 
 
 def getcolor(i: int) -> str:
