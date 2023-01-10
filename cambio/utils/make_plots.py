@@ -136,6 +136,7 @@ class MakePlots:
             legend_labels: list[str] = []
             years: list[CambioVar] = []
             climvarvals: list[float | CambioVar] = []
+
             # Loop over variables to plot in each panel
             for name in values["selected_vars"]:
                 # label = values[""]
@@ -150,9 +151,12 @@ class MakePlots:
                 # Loop over the scenarios and append the variables needed for the plot
                 for scenario in scenarios:
                     scenario_id = scenario["scenario_id"]
+                    year = scenario["year"]
                     yvals = conversion_fun(scenario[name])
+                    inds = get_years_to_plot(year, self.year_range)
+
+                    years.append(year)
                     climvarvals.append(yvals)
-                    years.append(scenario["year"])
                     legend_labels.append(f"{scenario_id}: {label}")
             # Set all the plots for this panel
             values["plot"] = self.plot_panel(years, climvarvals, legend_labels, ylabel)
@@ -213,6 +217,18 @@ def gtc_to_gtco2(x: float) -> float:
 
 def gtc_to_atm(x: float) -> float:
     return x / 2.12
+
+
+def get_years_to_plot(
+    year: npt.NDArray[np.float64], year_range: tuple[float, float]
+) -> npt.NDArray[np.float64]:
+    """
+    Get indices to the years that will be plotted
+    @param year  Original years
+    @param year_range  First and last year of range to plot
+    @returns  Indices to years that will be plotted
+    """
+    return np.where(np.logical_and(year > year_range[0]), year < year_range[1])[0]
 
 
 def getcolor(i: int) -> str:
