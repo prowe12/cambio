@@ -6,7 +6,7 @@ By Penny Rowe and Daniel Neshyba-Rowe
 
 
 from cambio.utils.cambio import cambio
-from cambio.utils.scenarios import CambioInputs
+from cambio.utils.schemas import CambioInputs
 from cambio.utils.cambio_utils import CambioVar
 
 

@@ -1,3 +1,8 @@
+"""
+By Daniel Neshyba-Rowe
+2022/12/21
+"""
+
 import json
 from django.http import QueryDict
 from pydantic import BaseModel
