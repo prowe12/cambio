@@ -27,7 +27,7 @@
         <b>Climate Scenarios</b><br>
         {% for i, scenario_input in old_scenario_inputs.items %}
           <details>
-          <summary>Scenario {{i}}</summary>
+          <summary>{{i}}</summary>
           <ul>
             {% for name, value in scenario_input.items %}
              <li> {{name}} = {{value}} </li>
@@ -48,7 +48,7 @@
         <br><br>
         <!--Allow user to delete an existing scenario-->
         <b>Delete climate scenario:</b><br>
-        {% for scenario in scenarios %}
+        {% for scenario, plot_scenario in plot_scenarios %}
           {% if scenario in request.GET %}
             <input class="vars-to-plot-buttons " type="checkbox" id="del_scenario{{scenario}}"
             name="del_scenario{{scenario}}" value="on" checked>
@@ -56,6 +56,7 @@
             <input type="checkbox" id="del_scenario{{scenario}}" name="del_scenario{{scenario}}" value="on">
           {% endif %}
           <label for="del_{{scenario}}">{{scenario}}</label>
+          <br>
         {% endfor %}
         <br>
         <button type="submit" value="Submit" formaction="/cambio/{{name}}">Delete</button>
@@ -67,13 +68,13 @@
         <b>Scenarios to plot</b>
         <div>
           <!-- Checkboxes for variables to plot -->
-          {% for plot_scenario in plot_scenarios %}
+          {% for id, plot_scenario in plot_scenarios %}
             {% if plot_scenario in request.GET %}
               <input type="checkbox" id="{{plot_scenario}}" name="{{plot_scenario}}" value="on" checked>
             {% else %}
               <input type="checkbox" id="{{plot_scenario}}" name="{{plot_scenario}}" value="on">
             {% endif %}
-            <label for="{{plot_scenario}}">{{plot_scenario}}</label>
+            <label for="{{plot_scenario}}">{{id}}</label>
           {% endfor %}
           &nbsp&nbsp&nbsp
           <button type="submit" value="Submit" formaction="/cambio/{{name}}">Plot</button>
