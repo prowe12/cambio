@@ -57,8 +57,23 @@ def index(request: HttpRequest) -> HttpResponse:
     # Get new scenario from get parameters for model run and for saving to cookies
     # *only* if it exists
     new_scenario_id = request.GET.get("scenario_name", "")
+    print(f"\n\nid: {new_scenario_id}\n\n")
     if new_scenario_id != "":
         scenario_inputs[new_scenario_id] = CambioInputs.from_dict(request.GET)
+
+    # Add the default if it is not on the list
+    print(f"\n\nNumber of scenarios: {len(scenario_inputs)}\n\n")
+    default = "Default"
+    if default not in scenario_inputs:
+        scenario_inputs[default] = CambioInputs.from_dict(request.GET)
+
+    if len(scenarios_ids_to_plot) == 0:
+        scenarios_ids_to_plot = [default]
+
+    # TODO: delete
+    print("\n\nscenario inputs:")
+    print(scenario_inputs)
+    print()
 
     # Remove all scenarios that are scheduled to be deleted
     scenario_inputs = {
@@ -71,9 +86,7 @@ def index(request: HttpRequest) -> HttpResponse:
     # (Packed into "scenarios")
     scenarios = run_model_for_dict(scenario_inputs)
     scenarios_to_plot = [
-        scenarios[scenario_id]
-        for scenario_id in scenarios_ids_to_plot
-        if scenario_id in scenarios
+        scenarios[sid] for sid in scenarios_ids_to_plot if sid in scenarios
     ]
 
     # Create the plots
