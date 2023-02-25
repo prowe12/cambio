@@ -67,9 +67,11 @@
       <div id="climate-variables-top" class="climate_variables">
         <b>Scenarios to plot</b>
         <div>
-          <!-- Checkboxes for variables to plot -->
+          <!-- Checkboxes for scenarios to plot -->
           {% for id, plot_scenario in plot_scenarios %}
             {% if plot_scenario in request.GET %}
+              <input type="checkbox" id="{{plot_scenario}}" name="{{plot_scenario}}" value="on" checked>
+            {% elif id == "Default" %}
               <input type="checkbox" id="{{plot_scenario}}" name="{{plot_scenario}}" value="on" checked>
             {% else %}
               <input type="checkbox" id="{{plot_scenario}}" name="{{plot_scenario}}" value="on">
