@@ -129,6 +129,10 @@ class MakePlots:
         @returns  The plots and associated data
         """
 
+        # TODO: delete print statements
+        print("\n\nlen(scenarios): ")
+        print(len(scenarios))
+
         if len(scenarios) == 0:
             return self.plot_stuff
 
@@ -141,7 +145,6 @@ class MakePlots:
 
             # Loop over variables to plot in each panel
             for name in values["selected_vars"]:
-                # label = values[""]
                 unit = values["selected_unit"]
                 conversion_fun = self.conversion_funs[name][unit]
 
@@ -190,6 +193,7 @@ class MakePlots:
                         name=name,
                         opacity=0.8,
                         marker_color=getcolor(i),
+                        showlegend=True,
                     )
                     for i, (xvals, yvals, name) in enumerate(
                         zip(years, climvarvals, names)
