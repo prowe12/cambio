@@ -52,17 +52,6 @@ class MakePlots:
         }
 
         self.plot_stuff = {
-            "carbon": {
-                "plot": [],
-                "vars": {
-                    "C_atm": "Atmospheric carbon",
-                    "C_ocean": "Oceanic carbon",
-                },
-                "units": list(conversion_funs_general["carbon"].keys()),
-                "selected_vars": ["C_atm"],
-                "selected_unit": "GtC",
-                "label": "Carbon amount",
-            },
             "flux": {
                 "plot": [],
                 "vars": {
@@ -76,6 +65,17 @@ class MakePlots:
                 "selected_vars": ["F_ha"],
                 "selected_unit": "GtC/year",
                 "label": "Flux",
+            },
+            "carbon": {
+                "plot": [],
+                "vars": {
+                    "C_atm": "Atmospheric carbon",
+                    "C_ocean": "Oceanic carbon",
+                },
+                "units": list(conversion_funs_general["carbon"].keys()),
+                "selected_vars": ["C_atm"],
+                "selected_unit": "GtC",
+                "label": "Carbon amount",
             },
             "temp": {
                 "plot": [],
