@@ -45,6 +45,8 @@ class MakePlots:
             "F_al": conversion_funs_general["flux"],
             "F_ao": conversion_funs_general["flux"],
             "F_oa": conversion_funs_general["flux"],
+            "netflux_oa": conversion_funs_general["flux"],
+            "netflux_la": conversion_funs_general["flux"],
             "T_C": conversion_funs_general["temp"],
             "T_anomaly": conversion_funs_general["temp_anomaly"],
             "pH": conversion_funs_general["none"],
@@ -60,6 +62,8 @@ class MakePlots:
                     "F_oa": "Flux ocean->atmosphere",
                     "F_la": "Flux land->atmosphere",
                     "F_al": "Flux atmosphere->land",
+                    "netflux_oa": "Net flux ocean->atmosphere",
+                    "netflux_la": "Net flux land->atmosphere",
                 },
                 "units": list(conversion_funs_general["flux"].keys()),
                 "selected_vars": ["F_ha"],
@@ -106,9 +110,14 @@ class MakePlots:
             },
         }
 
+        self.derived_inputs = {
+            "netflux_oa": get_netflux_oa,
+            "netflux_la": get_netflux_la,
+        }
+
         for panel, values in self.plot_stuff.items():
             # Replace selected vars with get parameters, if present
-            plot_vars = list(values["vars"].keys())  # [y[0] for y in values["vars"]]
+            plot_vars = list(values["vars"].keys())
             selected_vars = [x for x in inputs.keys() if x in plot_vars]
             if len(selected_vars) > 0:
                 values["selected_vars"] = selected_vars
@@ -153,6 +162,15 @@ class MakePlots:
                 for scenario in scenarios:
                     scenario_id = scenario["scenario_id"]
                     year = scenario["year"]
+
+                    # Get variables derived from other variables
+                    if name not in scenario:
+                        if name in self.derived_inputs:
+                            myfun = self.derived_inputs[name]
+                            scenario[name] = myfun(scenario)
+                        else:
+                            raise ValueError("Variable cannot be plotted")
+
                     yvals = conversion_fun(scenario[name])
                     inds = get_years_to_plot(year, self.year_range)
 
@@ -205,13 +223,21 @@ class MakePlots:
         )
 
 
-def return_same(x: float) -> float:
+def get_netflux_oa(scenario):
+    return scenario["F_oa"] - scenario["F_ao"]
+
+
+def get_netflux_la(scenario):
+    return scenario["F_la"] - scenario["F_al"]
+
+
+def return_same(inp: float) -> float:
     """
     return same value
-    @param x value to return
+    @param inp value to return
     @returns  input value
     """
-    return x
+    return inp
 
 
 def dt_c_to_dt_f(dtemp: float) -> float:
