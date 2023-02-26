@@ -70,14 +70,16 @@ def index(request: HttpRequest) -> HttpResponse:
     @param request  The HttpRequest
     """
 
-    # Make the default plot 1st
-    # No need to run climate model for the default (but this may be moot)
+    # TODO List
     # Add net fluxes to 1st figure (e.g., from point of view of to the atmosphere)
+    # No need to run climate model for the default (but this may be moot)
     # Change the constrain albedo business so that if False, to make unconstrained = False or True
     # Maybe change "plot" to "update plot"?
     # Really need to align the x-axis so that times are always at the same position on the screen
     # It would be nice to be able to rename scenarios, and also have a way to add a notes elaborating on them
     # When curves are right on top of one another, it would be useful to have markers
+    # Remove start/stop year and dtime from display for added scenarios
+    # Improve variable names under Add new scenario
 
     # Get variables from request:
     scenarios_ids_to_plot = get_scenarios(request, "plot_scenario_")
