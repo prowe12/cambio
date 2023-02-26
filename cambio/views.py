@@ -70,40 +70,47 @@ def index(request: HttpRequest) -> HttpResponse:
     @param request  The HttpRequest
     """
 
+    # Make the default plot 1st
+    # No need to run climate model for the default (but this may be moot)
+    # Add net fluxes to 1st figure (e.g., from point of view of to the atmosphere)
+    # Change the constrain albedo business so that if False, to make unconstrained = False or True
+    # Maybe change "plot" to "update plot"?
+    # Really need to align the x-axis so that times are always at the same position on the screen
+    # It would be nice to be able to rename scenarios, and also have a way to add a notes elaborating on them
+    # When curves are right on top of one another, it would be useful to have markers
+
     # Get variables from request:
     scenarios_ids_to_plot = get_scenarios(request, "plot_scenario_")
     scenarios_ids_to_delete = get_scenarios(request, "del_scenario")
 
-    # Do not delete the default, even if the user asks you to
-    default = "Default"
-    if default in scenarios_ids_to_delete:
-        scenarios_ids_to_delete.remove(default)
-
     # Get variables from request for use in plots
     inputs = request.GET
 
-    # Get cambio inputs from cookies
-    scenario_inputs: dict[str, CambioInputs] = {
-        scenario_id: CambioInputs.from_json(scenario)
-        for scenario_id, scenario in request.COOKIES.items()
-    }
+    # Name of default scenario
+    default = "Default"
 
-    # Get new scenario from get parameters for model run and for saving to cookies
-    # *only* if it exists
+    # Get the scenario inputs:
+    # - Always include the default first (it can be overridden)
+    scenario_inputs: dict[str, CambioInputs] = {}
+    include_default(scenario_inputs, default)
+    # - Then add old scenarios from cookies
+    for scenario_id, scenario in request.COOKIES.items():
+        scenario_inputs[scenario_id] = CambioInputs.from_json(scenario)
+    # - Finally, get new scenario from get parameters only if it exists
     new_scenario_id = request.GET.get("scenario_name", "")
-    print(f"\n\nid: {new_scenario_id}\n\n")
     if new_scenario_id != "":
         scenario_inputs[new_scenario_id] = CambioInputs.from_dict(request.GET)
 
-    # Remove all scenarios that are scheduled to be deleted
+    # Remove scenarios that are scheduled to be deleted
+    # - Never remove the default
+    if default in scenarios_ids_to_delete:
+        scenarios_ids_to_delete.remove(default)
+    # - Remove the other scenarios
     scenario_inputs = {
         key: value
         for key, value in scenario_inputs.items()
         if key not in scenarios_ids_to_delete
     }
-
-    # Always include the default
-    include_default(scenario_inputs, default)
 
     # Run the model on old and new inputs to get the climate model results
     # (Packed into "scenarios")
@@ -116,20 +123,20 @@ def index(request: HttpRequest) -> HttpResponse:
 
     scenarios_to_plot = [scenarios[sid] for sid in scenarios_ids_to_plot]
 
-    # Create the plots
+    # Create the plots (for passing to the html)
     makePlots = MakePlots(inputs)
     plot_divs = makePlots.make(scenarios_to_plot)
 
+    # Get the other variables to pass to the html
     scenario_ids = list(scenarios.keys())
+    old_scenario_inputs = {sid: inp.dict() for sid, inp in scenario_inputs.items()}
     plot_scenario_choices = [[sid, f"plot_scenario_{sid}"] for sid in scenario_ids]
     plot_scenario_ids = [sid for sid in scenarios_ids_to_plot if sid in scenarios]
-    old_scenario_inputs = {sid: inp.dict() for sid, inp in scenario_inputs.items()}
 
     # Variables to pass to html
     context = {
         "plot_divs": plot_divs,
         "old_scenario_inputs": old_scenario_inputs,
-        "scenarios": scenario_ids,
         "plot_scenario_choices": plot_scenario_choices,
         "plot_scenario_ids": plot_scenario_ids,
         "inputs": ScenarioInputs().dict(),
