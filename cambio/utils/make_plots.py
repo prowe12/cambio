@@ -57,13 +57,13 @@ class MakePlots:
             "flux": {
                 "plot": [],
                 "vars": {
-                    "F_ha": "Flux human->atmosphere",
-                    "F_ao": "Flux atmosphere->ocean",
-                    "F_oa": "Flux ocean->atmosphere",
-                    "F_la": "Flux land->atmosphere",
-                    "F_al": "Flux atmosphere->land",
-                    "netflux_oa": "Net flux ocean->atmosphere",
-                    "netflux_la": "Net flux land->atmosphere",
+                    "F_ha": "human->atmos",
+                    "F_ao": "atmos->ocean",
+                    "F_oa": "ocean->atmos",
+                    "F_la": "land->atmos",
+                    "F_al": "atmos->land",
+                    "netflux_oa": "Net, ocean->atmos",
+                    "netflux_la": "Net, land->atmos ",
                 },
                 "units": list(conversion_funs_general["flux"].keys()),
                 "selected_vars": ["F_ha"],
@@ -73,8 +73,8 @@ class MakePlots:
             "carbon": {
                 "plot": [],
                 "vars": {
-                    "C_atm": "Atmospheric carbon",
-                    "C_ocean": "Oceanic carbon",
+                    "C_atm": "Atmospheric",
+                    "C_ocean": "Oceanic",
                 },
                 "units": list(conversion_funs_general["carbon"].keys()),
                 "selected_vars": ["C_atm"],
@@ -216,6 +216,14 @@ class MakePlots:
                 "layout": {
                     "xaxis": {"title": "year"},
                     "yaxis": {"title": ylabel},
+                    "legend": {
+                        "orientation": "h",
+                        "entrywidth": 70,
+                        "yanchor": "bottom",
+                        "y": 1.02,
+                        "xanchor": "right",
+                        "x": 1,
+                    },
                 },
             },
             output_type="div",
