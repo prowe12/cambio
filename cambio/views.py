@@ -11,9 +11,7 @@ from typing import Any
 from django.shortcuts import render
 from django.http import HttpRequest, HttpResponse
 
-from cambio.utils.view_utils import (
-    run_model_for_dict,
-)
+from cambio.utils.view_utils import run_model_for_dict
 
 #    make_plots,
 from cambio.utils.make_plots import MakePlots
