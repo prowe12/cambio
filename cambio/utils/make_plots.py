@@ -129,10 +129,6 @@ class MakePlots:
         @returns  The plots and associated data
         """
 
-        # TODO: delete print statements
-        print("\n\nlen(scenarios): ")
-        print(len(scenarios))
-
         if len(scenarios) == 0:
             return self.plot_stuff
 
