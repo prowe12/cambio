@@ -206,19 +206,40 @@ class MakePlots:
 
 
 def return_same(x: float) -> float:
+    """
+    return same value
+    @param x value to return
+    @returns  input value
+    """
     return x
 
 
-def dt_c_to_dt_f(x: float) -> float:
-    return x * 9 / 5
+def dt_c_to_dt_f(dtemp: float) -> float:
+    """
+    Convert temperature change in Celsius to temperature change
+    in Fahrenheit
+    @param dtemp  Temperature change in Celsius
+    @returns  Temperature in Fahrenheit
+    """
+    return dtemp * 9 / 5
 
 
-def gtc_to_gtco2(x: float) -> float:
-    return x / 0.27
+def gtc_to_gtco2(carbon: float) -> float:
+    """
+    Convert GTC to GTCO2
+    @param  carbon  Carbon amount in GTC
+    @returns  Carbon amount in GTCO2
+    """
+    return carbon / 0.27
 
 
-def gtc_to_atm(x: float) -> float:
-    return x / 2.12
+def gtc_to_atm(carbon: float) -> float:
+    """
+    Convert from GTC to ppm
+    @param carbon  Carbon amount in GTC
+    @returns  Carbon amount in ppm
+    """
+    return carbon / 2.12
 
 
 def get_years_to_plot(
