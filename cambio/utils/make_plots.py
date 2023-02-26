@@ -30,7 +30,7 @@ class MakePlots:
 
         conversion_funs_general = {
             "carbon": {"GtC": return_same, "atm": gtc_to_atm, "GtCO2": gtc_to_gtco2},
-            "flux": {"GtC/year": return_same, "GtCO2/year": return_same},
+            "flux": {"GtC/year": return_same, "GtCO2/year": gtc_to_gtco2},
             "temp": {"C": return_same, "K": celsius_to_kelvin, "F": celsius_to_f},
             "temp_anomaly": {"C": return_same, "K": return_same, "F": dt_c_to_dt_f},
             "none": {"": return_same},
