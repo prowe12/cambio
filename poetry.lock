@@ -175,6 +175,17 @@ dotenv = ["python-dotenv (>=0.10.4)"]
 email = ["email-validator (>=1.0.3)"]
 
 [[package]]
+name = "python-dotenv"
+version = "1.0.0"
+description = "Read key-value pairs from a .env file and set them as environment variables"
+category = "main"
+optional = false
+python-versions = ">=3.8"
+
+[package.extras]
+cli = ["click (>=5.0)"]
+
+[[package]]
 name = "requests"
 version = "2.28.2"
 description = "Python HTTP for Humans."
@@ -251,7 +262,7 @@ socks = ["PySocks (>=1.5.6,!=1.5.7,<2.0)"]
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.10"
-content-hash = "d05f7d8e7ccc540157196ad53d37a7da9f8d6796c1d26e9e644a246907d9e7de"
+content-hash = "b0af3f484b3af01c8ca2725d13d554bf16fc025bb898f8da3977ff177899b7f9"
 
 [metadata.files]
 asgiref = []
@@ -276,6 +287,7 @@ pathspec = []
 platformdirs = []
 plotly = []
 pydantic = []
+python-dotenv = []
 requests = []
 sqlparse = []
 tenacity = []
