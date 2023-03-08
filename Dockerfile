@@ -1,26 +1,25 @@
-ARG PYTHON_VERSION=3.10-slim-buster
+FROM python:3.10
 
-FROM python:${PYTHON_VERSION}
+# set work directory
+WORKDIR /usr/src/app
 
+# set environment variables
 ENV PYTHONDONTWRITEBYTECODE 1
 ENV PYTHONUNBUFFERED 1
 
-RUN mkdir -p /code
+COPY . .
 
-WORKDIR /code
-
-COPY requirements.txt /tmp/requirements.txt
-
-RUN set -ex && \
-    pip install --upgrade pip && \
-    pip install -r /tmp/requirements.txt && \
-    rm -rf /root/.cache/
-
-COPY . /code/
-
-RUN python manage.py collectstatic --noinput
+# install dependencies
+RUN pip install poetry
+RUN poetry config virtualenvs.create false \
+    && poetry install
 
 EXPOSE 8000
 
+# This command is good for just getting it running. This will run the server on port 8000
+# CMD ["poetry", "run", "python", "manage.py", "runserver"]
+# CMD ["poetry", "run", "python", "-m", "gunicorn", "config.asgi:application", "--host", "0.0.0.0", "--port", "8000"]
+
 # replace demo.wsgi with <project_name>.wsgi
-CMD ["gunicorn", "--bind", ":8000", "--workers", "2", "cambio_site.wsgi"]
+CMD ["poetry", "run", "gunicorn", "--bind", ":8000", "--workers", "2", "cambio_site.wsgi"]
+
