@@ -20,7 +20,7 @@ from django.urls import include, path
 from cambio import views
 
 urlpatterns = [
-    path('cambio/', include('cambio.urls')),
-    path('admin/', admin.site.urls),
-    path('', views.index),
+    path("cambio/", include("cambio.urls")),
+    path("admin/", admin.site.urls),
+    path("", views.index),
 ]
