@@ -14,6 +14,9 @@ RUN pip install poetry
 RUN poetry config virtualenvs.create false \
     && poetry install
 
+# Use when the css is in a separate file (using whitenoise)
+# RUN poetry run python manage.py collectstatic --noinput
+
 EXPOSE 8000
 
 # This command is good for just getting it running. This will run the server on port 8000
