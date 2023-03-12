@@ -1,0 +1,23 @@
+Some useful git commands
+
+Create new branch and check it out:
+$ git checkout -b mine
+
+Switch to a branch (already existing)
+$ git checkout development
+$ git checkout mine
+
+Check the status:
+$ git status
+
+Check the differences between all changed files from last commit
+$ git diff
+
+Check the differences between all changed files from last commit for particular file:
+$ git diff tempfile
+
+To commit a file:
+$ git status
+$ git add filename
+$ git commit -m "Change message (in present tense)
+
