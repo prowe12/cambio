@@ -89,8 +89,8 @@ def cambio(inputs: CambioInputs) -> tuple[dict[str, CambioVar], dict[str, float]
     """
     Run the cambio model
 
-    @param start_year
-    @param stop_year
+    @param start_year  Starting year for the calculation
+    @param stop_year  Ending year for the calculation
     @param dtime = 1.0  time resolution (years)
     @param inv_time_constant
     @param transition_year = 2040.0  pivot year to start decreasing CO2

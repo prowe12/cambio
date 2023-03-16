@@ -15,7 +15,7 @@ RUN poetry config virtualenvs.create false \
     && poetry install
 
 # Use when the css is in a separate file (using whitenoise)
-# RUN poetry run python manage.py collectstatic --noinput
+RUN poetry run python manage.py collectstatic --noinput
 
 EXPOSE 8000
 

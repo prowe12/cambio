@@ -1,6 +1,7 @@
 # My files
 variables
 .env
+useful_git_commands
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
