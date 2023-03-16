@@ -13,12 +13,13 @@ CAMBIO has a variety of inputs that feed into the climate model. Some of these a
 
 CAMBIO was originally developed for an undergraduate class on modeling Earth's climate. In the class, students develop the module piece by piece. Finally, when it is complete, they use it to study a particular aspect of the climate system. The CAMBIO web app allows anyone to run experiments with CAMBIO, to see how varying inputs lead to different responses.
 
+## Authors
+  - **Penny Rowe** https://github.com/prowe12
+  - **Daniel Neshyba-Rowe** (https://github.com/rowedaniel
+  - **Steven Neshyba* https://github.com/sneshyba
+  - **See also credits below** 
+
 ## Credits
-
-The original CAMBIO model was written by Steven Neshyba: https://github.com/sneshyba.  
-
-The CAMBIO webapp was built by Penny Rowe (https://github.com/prowe12) and Daniel Neshyba-Rowe (https://github.com/rowedaniel.  
-
-We are grateful to Alex Ledger for all his support and advice!  
+We are grateful to Alex Ledger for all his support and advice. A big thank you to Ben Gamble for the idea of putting CAMBIO online, to Charles Dahl for developing the original design and CSS, and for both of them for their work on this project's predecessor, Benchly.  
 
 Various tutorials were extremely helpful in developing this project, including the Django documentation (https://docs.djangoproject.com/), as well as these excellent tutorials: https://fly.io/blog/deploying-django-to-production/#deploying-to-fly-io and https://davi.sh/blog/2022/10/django-with-flyio/.
