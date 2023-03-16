@@ -16,7 +16,9 @@ CAMBIO was originally developed for an undergraduate class on modeling Earth's c
 ## Credits
 
 The original CAMBIO model was written by Steven Neshyba: https://github.com/sneshyba.  
+
 The CAMBIO webapp was built by Penny Rowe (https://github.com/prowe12) and Daniel Neshyba-Rowe (https://github.com/rowedaniel.  
+
 We are grateful to Alex Ledger for all his support and advice!  
 
 Various tutorials were extremely helpful in developing this project, including the Django documentation (https://docs.djangoproject.com/), as well as these excellent tutorials: https://fly.io/blog/deploying-django-to-production/#deploying-to-fly-io and https://davi.sh/blog/2022/10/django-with-flyio/.
