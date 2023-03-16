@@ -16,7 +16,7 @@ CAMBIO was originally developed for an undergraduate class on modeling Earth's c
 ## Authors
   - **Penny Rowe** https://github.com/prowe12
   - **Daniel Neshyba-Rowe** (https://github.com/rowedaniel
-  - **Steven Neshyba* https://github.com/sneshyba
+  - **Steven Neshyba** https://github.com/sneshyba
   - **See also credits below** 
 
 ## Credits
