@@ -83,6 +83,19 @@ argon2 = ["argon2-cffi (>=19.1.0)"]
 bcrypt = ["bcrypt"]
 
 [[package]]
+name = "django-environ"
+version = "0.10.0"
+description = "A package that allows you to utilize 12factor inspired environment variables to configure your Django application."
+category = "main"
+optional = false
+python-versions = ">=3.5,<4"
+
+[package.extras]
+develop = ["coverage[toml] (>=5.0a4)", "pytest (>=4.6.11)", "furo (>=2021.8.17b43,<2021.9.0)", "sphinx (>=3.5.0)", "sphinx-notfound-page"]
+docs = ["furo (>=2021.8.17b43,<2021.9.0)", "sphinx (>=3.5.0)", "sphinx-notfound-page"]
+testing = ["coverage[toml] (>=5.0a4)", "pytest (>=4.6.11)"]
+
+[[package]]
 name = "django-hint"
 version = "0.2.0"
 description = "Type hinting package for django"
@@ -262,7 +275,7 @@ brotli = ["brotli"]
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.10"
-content-hash = "7c0c5ec4a486210e8a01c59fe1428978ab22ab36b5f60f4d0668bf02dc71d6f1"
+content-hash = "914497f08470f26944ca129bb4aa2b176ab6d3a52fbd2ebf6448de508f210be8"
 
 [metadata.files]
 asgiref = []
@@ -275,6 +288,7 @@ click = [
 ]
 colorama = []
 django = []
+django-environ = []
 django-hint = []
 gunicorn = []
 idna = []

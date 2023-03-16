@@ -15,6 +15,8 @@ RUN poetry config virtualenvs.create false \
     && poetry install
 
 # Use when the css is in a separate file (using whitenoise)
+# Set SECRET_KEY for building purposes
+ENV SECRET_KEY "non-secret-key-for-building-purposes"
 RUN poetry run python manage.py collectstatic --noinput
 
 EXPOSE 8000
