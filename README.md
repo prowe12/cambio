@@ -15,9 +15,8 @@ CAMBIO was originally developed for an undergraduate class on modeling Earth's c
 
 ## Authors
   - **Penny Rowe** https://github.com/prowe12
-  - **Daniel Neshyba-Rowe** (https://github.com/rowedaniel
+  - **Daniel Neshyba-Rowe** https://github.com/rowedaniel
   - **Steven Neshyba** https://github.com/sneshyba
-  - **See also credits below** 
 
 ## Credits
 We are grateful to Alex Ledger for all his support and advice. A big thank you to Ben Gamble for the idea of putting CAMBIO online, to Charles Dahl for developing the original design and CSS, and for both of them for their work on this project's predecessor, Benchly.  
