@@ -1,5 +1,5 @@
 """
-By Daniel Neshyba-Rowe
+By Daniel Neshyba-Rowe and Penny Rowe
 2022/12/21
 """
 
@@ -26,6 +26,7 @@ class BaseInputs(BaseModel):
         """
         Replace default inputs to CAMBIO with user-defined values
         """
+
         input_dict_cleaned = clean_dict(input_dict)
         try:
             return cls.parse_obj(input_dict_cleaned)
@@ -39,7 +40,21 @@ class BaseInputs(BaseModel):
         """
         # TODO: investigate possibilities of malicious code injection via json deserialization
         input_dict = json.loads(input_json)
+
         return cls.from_dict(input_dict)
+
+    @classmethod
+    def is_json(cls, possible_json: str) -> bool:
+        """
+        Determine if a string is valid json
+        @param possible_json  The input to test
+        @returns  True if json, else false
+        """
+        try:
+            json.loads(possible_json)
+        except ValueError as e:
+            return False
+        return True
 
 
 class CambioInputs(BaseInputs):

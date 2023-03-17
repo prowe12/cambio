@@ -5,9 +5,6 @@ By Penny Rowe and Daniel Neshyba-Rowe
 Inspired by Benchly, by Ben Gamble, Charlie Dahl, and Penny Rowe
 """
 
-import json
-
-from typing import Any
 from django.shortcuts import render
 from django.http import HttpRequest, HttpResponse
 
@@ -69,7 +66,7 @@ def index(request: HttpRequest) -> HttpResponse:
     # TODO List
     # No need to run climate model for the default (but this may be moot)
     # Change the constrain albedo business so that if False, to make unconstrained = False or True
-    # It would be nice to be able to rename scenarios, and also have a way to add a notes elaborating on them
+    # It would be nice to be able to rename scenarios, and also add a notes elaborating on them
     # When curves are right on top of one another, it would be useful to differentiate them
     # Remove start/stop year and dtime from display for added scenarios
     # Improve variable names under Add new scenario
@@ -90,7 +87,9 @@ def index(request: HttpRequest) -> HttpResponse:
     include_default(scenario_inputs, default)
     # - Then add old scenarios from cookies
     for scenario_id, scenario in request.COOKIES.items():
-        scenario_inputs[scenario_id] = CambioInputs.from_json(scenario)
+        if CambioInputs.is_json(scenario):
+            scenario_inputs[scenario_id] = CambioInputs.from_json(scenario)
+
     # - Finally, get new scenario from get parameters only if it exists
     new_scenario_id = request.GET.get("scenario_name", "")
     if new_scenario_id != "":
