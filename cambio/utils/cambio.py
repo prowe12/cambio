@@ -88,19 +88,17 @@ def cambio(inputs: CambioInputs) -> tuple[dict[str, CambioVar], dict[str, float]
     # TODO: improve this docstring
     """
     Run the cambio model
-
     @param start_year  Starting year for the calculation
     @param stop_year  Ending year for the calculation
     @param dtime = 1.0  time resolution (years)
     @param inv_time_constant
     @param transition_year = 2040.0  pivot year to start decreasing CO2
-    @param transition_duration = 20.0  years over which to decrease co2
+    @param transition_duration = 20.0  years over which to decrease Co2
     @param long_term_emissions = 2.0  ongoing carbon emissions after decarbonization
     @param For feedbacks and stochastic runs
-    @param stochastic_c_atm_std_dev
+    @param stochastic_c_atm_std_dev  Noise level, in same units as CO2
     @param albedo_with_no_constraint = False
     @param albedo_feedback = False
-    @param stochastic_c_atm = False
     @param temp_anomaly_feedback = False
     """
 
@@ -156,6 +154,12 @@ def cambio(inputs: CambioInputs) -> tuple[dict[str, CambioVar], dict[str, float]
     for key in climatestate:
         climate[key] = np.zeros(ntimes)
 
+    # Only turn on noise if the noise level is > 0
+    if inputs.stochastic_c_atm_std_dev > 0:
+        stochastic_c_atm = True
+    else:
+        stochastic_c_atm = False
+
     # Loop over all the times in the scheduled flow
     for i in range(len(time)):
 
@@ -167,7 +171,7 @@ def cambio(inputs: CambioInputs) -> tuple[dict[str, CambioVar], dict[str, float]
             flux_human_atm[i],
             inputs.albedo_with_no_constraint,
             inputs.albedo_feedback,
-            inputs.stochastic_C_atm,
+            stochastic_c_atm,
             inputs.temp_anomaly_feedback,
         )
 

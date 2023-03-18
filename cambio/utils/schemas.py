@@ -16,8 +16,7 @@ class BaseInputs(BaseModel):
     long_term_emissions: float = 2
     albedo_feedback: bool = False
     temp_anomaly_feedback: bool = False
-    stochastic_C_atm: bool = False
-    stochastic_c_atm_std_dev: float = 5
+    stochastic_c_atm_std_dev: float = 0
 
     @classmethod
     def from_dict(cls, input_dict: dict[str, str] | QueryDict):

@@ -42,7 +42,6 @@ def include_default(scenario_inputs, default: str):
             "albedo_with_no_constraint": [""],
             "albedo_feedback": [""],
             "temp_anomaly_feedback": [""],
-            "stochastic_C_atm": [""],
             "stochastic_c_atm_std_dev": [""],
             "scenario_name": ["hi"],
             "F_ha": ["on"],
@@ -176,7 +175,6 @@ def index(request: HttpRequest) -> HttpResponse:
         "transition_duration": "Years to decarbonize",
         "long_term_emissions": "Long-term CO2 emissions",
         "temp_anomaly_feedback": "Forest fire feedback",
-        "stochastic_C_atm": "Include noise",
         "stochastic_c_atm_std_dev": "Noise level",
         "scenario_name": "Scenario name",
     }
