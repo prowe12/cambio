@@ -19,7 +19,7 @@ CAMBIO was originally developed for an undergraduate class on modeling Earth's c
   - **Steven Neshyba** https://github.com/sneshyba
 
 ## Credits
-We are grateful to Alex Ledger for all his support and advice. A big thank you to Ben Gamble for the idea of putting CAMBIO online, to Charles Dahl for developing the original design and CSS, and to both of them for their work on this project's predecessor, Benchly.  
+We are grateful to Alex Ledger (https://github.com/aled1027) for all his support and advice. A big thank you to Ben Gamble for the idea of putting CAMBIO online, to Charles Dahl for developing the original design and CSS, and to both of them for their work on this project's predecessor, Benchly.  
 
 Various tutorials were extremely helpful in developing this project, including the Django documentation (https://docs.djangoproject.com/), as well as these excellent tutorials: https://fly.io/blog/deploying-django-to-production/#deploying-to-fly-io and https://davi.sh/blog/2022/10/django-with-flyio/.
 
@@ -27,3 +27,6 @@ Various tutorials were extremely helpful in developing this project, including t
 Copyright (C) 2023 Penny Rowe, Daniel Neshyba-Rowe, and Steven Neshyba.
 
 Acknowledge use by including the statement "By Penny Rowe, Daniel Neshyba-Rowe, and Steven Neshyba - Own work, GNU GPLv3, https://github.com/prowe12/cambio.
+
+## Testing
+$ poetry run python run_tests.py
