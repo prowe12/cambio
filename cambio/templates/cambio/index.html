@@ -16,12 +16,11 @@
     <h1>CAMBIO</h1>
   </div>
 
-  <form action="/cambio/{{name}}" method="GET">
     <div class="row">
       <div class="column1">
         <!--Create drop-down list of previous added scenarios-->
         <b>Climate Scenarios</b><br>
-        {% for i, scenario_input in old_scenario_inputs.items %}
+          {% for i, scenario_input in old_scenario_inputs.items %}
           <details>
           <summary>{{i}}</summary>
           <ul>
@@ -35,15 +34,19 @@
         <br>
         <!--Allow user to add a new scenario-->
         <b>Add new climate scenario:</b><br>
-        {% for inp, dflt in inputs.items %}
-          <label for="{{inp}}">{{inp}}</label>
-          <input type="text" placeholder="{{dflt}}" id="{{inp}}" name="{{inp}}"><br>
-        {% endfor %}
-        <button type="submit" value="Submit" formaction="/cambio/{{name}}">Add</button>
+        <form action="/cambio/" method="GET">
+          {% for inp, dflt in inputs.items %}
+            <label for="{{inp}}">{{inp}}</label>
+            <input type="text" placeholder="{{dflt}}" id="{{inp}}" name="{{inp}}"><br>
+          {% endfor %}
+        <button type="submit" value="Submit" formaction="/cambio/">Add</button>
+        </form>
+
 
         <br><br>
         <!--Allow user to delete an existing scenario-->
         <b>Delete climate scenario:</b><br>
+        <form action="/cambio/" method="GET">
         {% for scenario_id, plot_scenario in plot_scenario_choices %}
           {% if scenario_id in request.GET %}
             <input class="vars-to-plot-buttons " type="checkbox" id="del_scenario{{scenario_id}}"
@@ -56,10 +59,12 @@
         {% endfor %}
         <br>
         <button type="submit" value="Submit" formaction="/cambio/{{name}}">Delete</button>
+        </form>
 
         <br><br><br><br><br><br><br><br><br><br><br>
       </div>
 
+      <form action="/cambio/" method="GET">
       <div id="climate-variables-top" class="climate_variables">
         <b>Scenarios to plot</b>
         <div>
@@ -72,7 +77,7 @@
             {% endif %}
             <label for="plot_scenario_{{scenario_id}}">{{scenario_id}}</label>
           {% endfor %}          
-          &nbsp&nbsp&nbsp
+          &nbsp
           <button type="submit" value="Submit" formaction="/cambio/{{name}}">Update Plots</button>
         </div>
       </div>
@@ -103,15 +108,15 @@
         <br>
 
         {{values.plot}}
-        ____________________________________________________________________________________________________________
+        <hr>
         <br><br>
         {% endfor %}
         {% endautoescape %}
 
       </div>
+      </form>
 
     </div>
-  </form>
 
 
   <br> <br>
