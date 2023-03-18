@@ -127,31 +127,11 @@ class ManageInputs:
         return self.scenario_inputs
 
 
-def get_display_inputs(model_inputs: dict) -> dict:
-    """
-    Map the model inputs onto the display inputs
-    @param model_inputs  Dictionary with name, value
-    @returns display_inputs  Dictionairy with new name, value
-    """
-    display_inputs = {}
-    for key, value in model_to_display.items():
-        display_inputs[value] = model_inputs[key]
-    return display_inputs
-
-
 def index(request: HttpRequest) -> HttpResponse:
     """
     Create the view for the main page
     @param request  The HttpRequest
     """
-
-    # TODO List
-    # No need to run climate model for the default (but this may be moot)
-    # Change the constrain albedo business so that if False, to make unconstrained = False or True
-    # It would be nice to be able to rename scenarios, and also add a notes elaborating on them
-    # When curves are right on top of one another, it would be useful to differentiate them
-    # Remove start/stop year and dtime from display for added scenarios
-    # Improve variable names under Add new scenario
 
     # Get variables from request:
     scenarios_ids_to_plot = get_scenarios(request, "plot_scenario_")
@@ -190,13 +170,6 @@ def index(request: HttpRequest) -> HttpResponse:
     old_display_inputs = {sid: inp.dict() for sid, inp in scenario_inputs.items()}
     plot_scenario_choices = [[sid, f"plot_scenario_{sid}"] for sid in scenario_ids]
     plot_scenario_ids = [sid for sid in scenarios_ids_to_plot if sid in scenarios]
-
-    print()
-    print()
-    print(ScenarioInputs().dict())
-    print()
-    print()
-    # display_inputs = get_display_inputs(ScenarioInputs().dict())
 
     display_names: dict = {
         "transition_year": "Year CO2 emission peaks",

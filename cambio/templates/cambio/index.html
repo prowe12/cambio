@@ -89,13 +89,15 @@
         {% for name, values in plot_divs.items %}
           <!-- Checkboxes for variables to plot -->
           {% for inp, disp in values.vars.items %}
+          <label>
             {% if inp in values.selected_vars %}
               <input type="checkbox" id="{{inp}}" name="{{inp}}" value="on" checked>
             {% else %}
               <input type="checkbox" id="{{inp}}" name="{{inp}}" value="on">
             {% endif %}
-            <label for="{{inp}}">{{disp}}</label>
-        {% endfor %}
+            {{disp}}
+          </label>
+          {% endfor %}
         <br>
         <!-- Radio buttons for units to plot -->
         {% for unit in values.units %}

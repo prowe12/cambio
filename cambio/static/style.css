@@ -67,8 +67,16 @@ input[type="text"] {
 .graph_area {
     float: left;
     width: 75%;
-    padding: 0px 0px;
+    padding: 5px 5px;
     border: 4px solid black;
+}
+
+label {
+    white-space: nowrap;
+}
+
+.wrappable {
+    white-space: normal;
 }
 
 .climate_variables {
@@ -88,7 +96,7 @@ input[type="text"] {
     clear: both;
 }
 
-/* Responsive layout - makes the three columns stack on top of each other instead of next to each other */
+/* Responsive layout - make the columns stack on top of each other instead of next to each other */
 @media screen and (max-width:600px) {
     .column1 {
         width: 100%;
