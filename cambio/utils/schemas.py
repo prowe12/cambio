@@ -11,15 +11,13 @@ from pydantic import BaseModel
 class BaseInputs(BaseModel):
     """Class for default inputs to CAMBIO"""
 
-    inv_time_constant: float = 0.025
-    transition_year: float = 2040.0
-    transition_duration: float = 20.0
-    long_term_emissions: float = 2.0
-    albedo_with_no_constraint: bool = False
+    transition_year: float = 2040
+    transition_duration: float = 20
+    long_term_emissions: float = 2
     albedo_feedback: bool = False
     temp_anomaly_feedback: bool = False
     stochastic_C_atm: bool = False
-    stochastic_c_atm_std_dev: float = 5.0
+    stochastic_c_atm_std_dev: float = 5
 
     @classmethod
     def from_dict(cls, input_dict: dict[str, str] | QueryDict):
@@ -65,6 +63,8 @@ class CambioInputs(BaseInputs):
     start_year: float = 1750.0
     stop_year: float = 2200.0
     dtime: float = 1.0
+    inv_time_constant: float = 0.025
+    albedo_with_no_constraint: bool = False
 
 
 class ScenarioInputs(BaseInputs):

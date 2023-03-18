@@ -217,12 +217,12 @@ def propagate_climate_state(
     # Get the temperature anomaly resulting from carbon concentrations
     t_anom = climateParams.diagnose_temp_anomaly(c_atm)
 
-    # Get fluxes (optionally activating the impact temperature has on them)
+    # Get fluxes, optionally activating the impact temperature has on land
+    # (via photosynthesis reduction)
+    f_oa = climateParams.diagnose_flux_ocean_atm(c_ocean, t_anom)
     if temp_anomaly_feedback:
-        f_oa = climateParams.diagnose_flux_ocean_atm(c_ocean, t_anom)
         f_al = climateParams.diagnose_flux_atm_land(t_anom, c_atm)
     else:
-        f_oa = climateParams.diagnose_flux_ocean_atm(c_ocean, 0)
         f_al = climateParams.diagnose_flux_atm_land(0, c_atm)
 
     # Get other fluxes resulting from carbon concentrations

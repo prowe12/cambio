@@ -123,8 +123,20 @@ class ManageInputs:
         }
 
     def get(self):
-        """get"""
+        """Get the scenario inputs"""
         return self.scenario_inputs
+
+
+def get_display_inputs(model_inputs: dict) -> dict:
+    """
+    Map the model inputs onto the display inputs
+    @param model_inputs  Dictionary with name, value
+    @returns display_inputs  Dictionairy with new name, value
+    """
+    display_inputs = {}
+    for key, value in model_to_display.items():
+        display_inputs[value] = model_inputs[key]
+    return display_inputs
 
 
 def index(request: HttpRequest) -> HttpResponse:
@@ -175,17 +187,35 @@ def index(request: HttpRequest) -> HttpResponse:
 
     # Get the other variables to pass to the html
     scenario_ids = list(scenarios.keys())
-    old_scenario_inputs = {sid: inp.dict() for sid, inp in scenario_inputs.items()}
+    old_display_inputs = {sid: inp.dict() for sid, inp in scenario_inputs.items()}
     plot_scenario_choices = [[sid, f"plot_scenario_{sid}"] for sid in scenario_ids]
     plot_scenario_ids = [sid for sid in scenarios_ids_to_plot if sid in scenarios]
+
+    print()
+    print()
+    print(ScenarioInputs().dict())
+    print()
+    print()
+    # display_inputs = get_display_inputs(ScenarioInputs().dict())
+
+    display_names: dict = {
+        "transition_year": "Year CO2 emission peaks",
+        "transition_duration": "Years to decarbonize",
+        "long_term_emissions": "Long-term CO2 emissions",
+        "temp_anomaly_feedback": "Forest fire feedback",
+        "stochastic_C_atm": "Include noise",
+        "stochastic_c_atm_std_dev": "Noise level",
+        "scenario_name": "Scenario name",
+    }
 
     # Variables to pass to html
     context = {
         "plot_divs": plot_divs,
-        "old_scenario_inputs": old_scenario_inputs,
+        "old_scenario_inputs": old_display_inputs,
         "plot_scenario_choices": plot_scenario_choices,
         "plot_scenario_ids": plot_scenario_ids,
-        "inputs": ScenarioInputs().dict(),
+        "inputs": ScenarioInputs().dict(),  # display_inputs,  #
+        "display_names": display_names,
     }
     response = render(request, "cambio/index.html", context)
 
