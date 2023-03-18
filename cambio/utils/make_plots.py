@@ -57,13 +57,13 @@ class MakePlots:
             "flux": {
                 "plot": [],
                 "vars": {
-                    "F_ha": "human->atmos",
-                    "F_ao": "atmos->ocean",
-                    "F_oa": "ocean->atmos",
-                    "F_la": "land->atmos",
-                    "F_al": "atmos->land",
-                    "netflux_oa": "Net, ocean->atmos",
-                    "netflux_la": "Net, land->atmos ",
+                    "F_ha": "Human&rarr;Atmos",
+                    "F_ao": "Atmos&rarr;Ocean",
+                    "F_oa": "Ocean&rarr;Atmos",
+                    "F_la": "Land&rarr;Atmos",
+                    "F_al": "Atmos&rarr;Land",
+                    "netflux_oa": "Net, Ocean&harr;Atmos",
+                    "netflux_la": "Net, Land&harr;Atmos ",
                 },
                 "units": list(conversion_funs_general["flux"].keys()),
                 "selected_vars": ["F_ha"],
@@ -186,7 +186,7 @@ class MakePlots:
         self,
         years: list[npt.NDArray[np.float64]],
         climvarvals: list[npt.NDArray[np.float64]],
-        names: list[str],
+        names_in: list[str],
         ylabel: str,
     ):
         """
@@ -197,6 +197,16 @@ class MakePlots:
         @param ylabel
         @returns a plotly plot object
         """
+
+        names = []
+        # Replace arrows with better symbols
+        for name in names_in:
+            if "&rarr;" in name:
+                name = name.replace("&rarr;", "\u2192")
+            if "&harr;" in name:
+                name = name.replace("&harr;", "\u2194")
+            names.append(name)
+
         return plot(
             {
                 "data": [
