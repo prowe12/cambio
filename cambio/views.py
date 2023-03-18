@@ -57,6 +57,76 @@ def include_default(scenario_inputs, default: str):
         scenario_inputs[default] = CambioInputs.from_dict(dflt_params)
 
 
+class ManageInputs:
+    """ """
+
+    def __init__(self, request, default):
+        """Get the scenario inputs:
+        # - Always include the default first (it can be overridden)"""
+        self.new_scenario_id = ""
+        self.is_new = False
+        self.new_scenario = None
+        self.scenario_inputs: dict[str, CambioInputs] = {}
+        include_default(self.scenario_inputs, default)
+
+        self.add_old(request.COOKIES)
+        self.set_new(request)
+
+    def add_old(self, cookies):
+        """add old scenarios from cookies"""
+        for scenario_id, scenario in cookies.items():
+            if CambioInputs.is_json(scenario):
+                self.scenario_inputs[scenario_id] = CambioInputs.from_json(scenario)
+
+    def set_new(self, request):
+        """Get new scenario from get parameters only if it exists"""
+        new_scenario_id = request.GET.get("scenario_name", "")
+        if new_scenario_id != "":
+            self.new_scenario_id = new_scenario_id
+            self.is_new = True
+            self.new_scenario = CambioInputs.from_dict(request.GET)
+            self.scenario_inputs[new_scenario_id] = self.new_scenario
+        else:
+            self.new_scenario_id = ""
+            self.is_new = False
+            self.new_scenario = None
+
+    def new_exists(self):
+        """
+        Return True if new scenario exists
+        @returns True if new scenario exists, else False
+        """
+        return self.is_new
+
+    def get_new(self):
+        """
+        Get the new scenario id and new scenario
+        @returns  The new scenario id
+        @returns  The new scenario
+        """
+        if self.is_new:
+            new_scenario = self.scenario_inputs[self.new_scenario_id].json()
+            return self.new_scenario_id, new_scenario
+        return None, None
+
+    def remove_deleted(self, scenarios_ids_to_delete, default):
+        """Remove scenarios that are scheduled to be deleted"""
+        # - Never remove the default
+        if default in scenarios_ids_to_delete:
+            scenarios_ids_to_delete.remove(default)
+
+        # - Remove the other scenarios
+        self.scenario_inputs = {
+            key: value
+            for key, value in self.scenario_inputs.items()
+            if key not in scenarios_ids_to_delete
+        }
+
+    def get(self):
+        """get"""
+        return self.scenario_inputs
+
+
 def index(request: HttpRequest) -> HttpResponse:
     """
     Create the view for the main page
@@ -81,33 +151,15 @@ def index(request: HttpRequest) -> HttpResponse:
     # Name of default scenario
     default = "Default"
 
-    # Get the scenario inputs:
-    # - Always include the default first (it can be overridden)
-    scenario_inputs: dict[str, CambioInputs] = {}
-    include_default(scenario_inputs, default)
-    # - Then add old scenarios from cookies
-    for scenario_id, scenario in request.COOKIES.items():
-        if CambioInputs.is_json(scenario):
-            scenario_inputs[scenario_id] = CambioInputs.from_json(scenario)
-
-    # - Finally, get new scenario from get parameters only if it exists
-    new_scenario_id = request.GET.get("scenario_name", "")
-    if new_scenario_id != "":
-        scenario_inputs[new_scenario_id] = CambioInputs.from_dict(request.GET)
+    # Get the scenario inputs from the request
+    manageInputs = ManageInputs(request, default)
 
     # Remove scenarios that are scheduled to be deleted
-    # - Never remove the default
-    if default in scenarios_ids_to_delete:
-        scenarios_ids_to_delete.remove(default)
-    # - Remove the other scenarios
-    scenario_inputs = {
-        key: value
-        for key, value in scenario_inputs.items()
-        if key not in scenarios_ids_to_delete
-    }
+    manageInputs.remove_deleted(scenarios_ids_to_delete, default)
 
     # Run the model on old and new inputs to get the climate model results
     # (Packed into "scenarios")
+    scenario_inputs = manageInputs.get()
     scenarios = run_model_for_dict(scenario_inputs)
     scenarios_ids_to_plot = [sid for sid in scenarios_ids_to_plot if sid in scenarios]
 
@@ -138,9 +190,18 @@ def index(request: HttpRequest) -> HttpResponse:
     response = render(request, "cambio/index.html", context)
 
     # If there is a new scenario in the get parameters, save it to cookies
-    if new_scenario_id != "":
-        scenario = scenario_inputs[new_scenario_id].json()
-        response.set_cookie(new_scenario_id, scenario)
+    # if new_scenario_id != "":
+    #     scenario = scenario_inputs[new_scenario_id].json()
+    #     response.set_cookie(new_scenario_id, scenario)
+
+    if manageInputs.new_exists():
+        new_id, new_scenario = manageInputs.get_new()
+        response.set_cookie(new_id, new_scenario)
+        # new_scenario = scenario_inputs[new_scenario_id].json()
+        # print()
+        # print(new_scenario_id)
+        # print(new_scenario)
+        # response.set_cookie(new_scenario_id, new_scenario)
 
     # delete all unwanted scenarios:
     for cookie_name in scenarios_ids_to_delete:
