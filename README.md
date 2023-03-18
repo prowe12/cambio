@@ -28,5 +28,7 @@ Copyright (C) 2023 Penny Rowe, Daniel Neshyba-Rowe, and Steven Neshyba.
 
 Acknowledge use by including the statement "By Penny Rowe, Daniel Neshyba-Rowe, and Steven Neshyba - Own work, GNU GPLv3, https://github.com/prowe12/cambio.
 
-## Testing
-$ poetry run python run_tests.py
+## Testing  
+Run the tests using the following command at the command prompt:  
+$ poetry run python manage.py test  
+
