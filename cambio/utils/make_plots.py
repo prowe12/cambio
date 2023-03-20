@@ -84,8 +84,8 @@ class MakePlots:
             "temp": {
                 "plot": [],
                 "vars": {
-                    "T_anomaly": "Global temperature change",
-                    "T_C": "Global temperature",
+                    "T_anomaly": "Temperature change",
+                    "T_C": "Temperature",
                 },
                 "units": list(conversion_funs_general["temp"].keys()),
                 "selected_vars": ["T_anomaly"],

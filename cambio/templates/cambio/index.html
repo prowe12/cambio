@@ -90,7 +90,11 @@
             <!-- Checkboxes for variables to plot -->
             <section class="row">
               <div class="column-2a">
-                <p><b>Variables to plot</b></p>
+                {{values.plot}}
+              </div>
+
+              <div class="column-2b">
+                <p class="space-above"><b>Variables to plot</b></p>
                 {% for inp, disp in values.vars.items %}
                 <p><label>
                 {% if inp in values.selected_vars %}
@@ -102,9 +106,8 @@
                 </label>
                 </p>
               {% endfor %}
-              </div>
               <!-- Radio buttons for units to plot -->
-              <div class="column-2b">
+                <br>
                 <p><b>Units</b></p>
                 {% for unit in values.units %}
                 <p>
@@ -116,16 +119,15 @@
                   <label for="climvarbutton-{{name}}-{{unit}}">{{unit}}</label>
                 </p>
                 {% endfor %}
-              </div>
               <!-- Update individual plot -->
-              <div class="column-2c">
+                <br>
                 <p>
                   <button type="submit" value="Submit" formaction="/cambio/#{{name}}">Update Plot</button>
                 </p>
               </div>
-            </section>
 
-          {{values.plot}}
+
+            </section>
           {% endfor %}
           {% endautoescape %}
 
