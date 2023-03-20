@@ -25,8 +25,8 @@
           <details>
           <summary>{{i}}</summary>
           <ul>
-            {% for name, value in scenario_input.items %}
-             <li> {{name}} = {{value}} </li>
+            {% for name, disp_name in display_names.items %}
+              <li> {{disp_name}} = {{scenario_input|get_item:name}} </li>
             {% endfor %}
           </ul>
         </details>
@@ -66,57 +66,70 @@
       </div>
 
       <form action="/cambio/" method="GET">
-      <div id="climate-variables-top" class="climate_variables">
-        <b>Scenarios to plot</b>
-        <div>
-          <!-- Checkboxes for scenarios to plot -->
-          {% for scenario_id, plot_scenario in plot_scenario_choices %}
-            {% if scenario_id in plot_scenario_ids %}
-              <input type="checkbox" id="plot_scenario{{scenario_id}}" name="plot_scenario_{{scenario_id}}" value="on" checked>
-            {% else %}
-              <input type="checkbox" id="plot_scenario{{scenario_id}}" name="plot_scenario_{{scenario_id}}" value="on">
-            {% endif %}
-            <label for="plot_scenario_{{scenario_id}}">{{scenario_id}}</label>
-          {% endfor %}          
-          &nbsp; &nbsp;
-          <button type="submit" value="Submit" formaction="/cambio/{{name}}">Update Plots</button>
+
+        <div class="graph_area" id="graph_area">
+          <b>Scenarios to plot</b>
+          <div>
+            <!-- Checkboxes for scenarios to plot -->
+            {% for scenario_id, plot_scenario in plot_scenario_choices %}
+              {% if scenario_id in plot_scenario_ids %}
+                <input type="checkbox" id="plot_scenario{{scenario_id}}" name="plot_scenario_{{scenario_id}}" value="on" checked>
+              {% else %}
+                <input type="checkbox" id="plot_scenario{{scenario_id}}" name="plot_scenario_{{scenario_id}}" value="on">
+              {% endif %}
+              <label for="plot_scenario_{{scenario_id}}">{{scenario_id}}</label>
+            {% endfor %}          
+            &nbsp; &nbsp;
+            <button type="submit" value="Submit" formaction="/cambio/{{name}}">Update Plots</button>
+          </div>
+
+          <!-- Time series plots -->
+          {% autoescape off %}
+          {% for name, values in plot_divs.items %}
+          <hr id="{{name}}">
+            <!-- Checkboxes for variables to plot -->
+            <section class="row">
+              <div class="column-2a">
+                <p><b>Variables to plot</b></p>
+                {% for inp, disp in values.vars.items %}
+                <p><label>
+                {% if inp in values.selected_vars %}
+                  <input type="checkbox" id="{{inp}}" name="{{inp}}" value="on" checked>
+                {% else %}
+                  <input type="checkbox" id="{{inp}}" name="{{inp}}" value="on">
+                {% endif %}
+                {{disp}}
+                </label>
+                </p>
+              {% endfor %}
+              </div>
+              <!-- Radio buttons for units to plot -->
+              <div class="column-2b">
+                <p><b>Units</b></p>
+                {% for unit in values.units %}
+                <p>
+                  {% if unit == values.selected_unit %}
+                  <input type="radio" id="climvarbutton-{{name}}-{{unit}}" name="{{name}}" value="{{unit}}" checked>
+                {% else %}
+                  <input type="radio" id="climvarbutton-{{name}}-{{unit}}" name="{{name}}" value="{{unit}}">
+                {% endif %}
+                  <label for="climvarbutton-{{name}}-{{unit}}">{{unit}}</label>
+                </p>
+                {% endfor %}
+              </div>
+              <!-- Update individual plot -->
+              <div class="column-2c">
+                <p>
+                  <button type="submit" value="Submit" formaction="/cambio/#{{name}}">Update Plot</button>
+                </p>
+              </div>
+            </section>
+
+          {{values.plot}}
+          {% endfor %}
+          {% endautoescape %}
+
         </div>
-      </div>
-
-      <div class="graph_area" id="graph_area">
-        <!-- Time series plots -->
-        {% autoescape off %}
-        {% for name, values in plot_divs.items %}
-          <!-- Checkboxes for variables to plot -->
-          {% for inp, disp in values.vars.items %}
-          <label>
-            {% if inp in values.selected_vars %}
-              <input type="checkbox" id="{{inp}}" name="{{inp}}" value="on" checked>
-            {% else %}
-              <input type="checkbox" id="{{inp}}" name="{{inp}}" value="on">
-            {% endif %}
-            {{disp}}
-          </label>
-          {% endfor %}
-        <br>
-        <!-- Radio buttons for units to plot -->
-        {% for unit in values.units %}
-          {% if unit == values.selected_unit %}
-            <input type="radio" id="climvarbutton-{{name}}-{{unit}}" name="{{name}}" value="{{unit}}" checked>
-          {% else %}
-            <input type="radio" id="climvarbutton-{{name}}-{{unit}}" name="{{name}}" value="{{unit}}">
-          {% endif %}
-            <label for="climvarbutton-{{name}}-{{unit}}">{{unit}}</label>
-          {% endfor %}
-        <br>
-
-        {{values.plot}}
-        <hr>
-        <br><br>
-        {% endfor %}
-        {% endautoescape %}
-
-      </div>
       </form>
 
     </div>
