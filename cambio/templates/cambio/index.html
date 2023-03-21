@@ -25,8 +25,8 @@
           <li>Set the values in the boxes below.</li>
           <li>Enter a Scenario name.</li>
           <li>Click Add.</li>
-          <li>To the right, select scenarios to plot.</li>
-          <li>To the right, click Update plots.</li>
+          <li>To the right, make plot selections.</li>
+          <li>Scroll down for more plots.</li>
       <ol>
     </div>
 
@@ -38,7 +38,7 @@
             <label for="{{name}}">{{disp_name}}</label>
             <input type="text" placeholder="{{inputs|get_item:name}}" id="{{name}}" name="{{name}}"><br>
           {% endfor %}
-        <button type="submit" value="Submit" formaction="/cambio/">Add</button>
+        <button type="submit" name="add_button" value="add" formaction="/cambio/">Add</button>
         <br>
         <!--</form>-->
 
@@ -65,7 +65,7 @@
           <label for="del_{{scenario_id}}">{{scenario_id}}</label>
           <br>
         {% endfor %}
-        <button type="submit" value="Submit" formaction="/cambio/{{name}}">Delete</button>
+        <button type="submit" name="delete_button" value="delete" formaction="/cambio/{{name}}">Delete</button>
         <!--</form>-->
 
         <br><br><br><br><br><br><br><br><br><br><br>

@@ -26,8 +26,6 @@ class MakePlots:
         """
         self.year_range = (1900.0, 2201.0)  # Year range to plot
 
-        inputs = clean_inputs(inputs)
-
         conversion_funs_general = {
             "carbon": {"GtC": return_same, "ppm": gtc_to_ppm, "GtCO2": gtc_to_gtco2},
             "flux": {"GtC/year": return_same, "GtCO2/year": gtc_to_gtco2},
@@ -115,6 +113,7 @@ class MakePlots:
             "netflux_la": get_netflux_la,
         }
 
+        inputs = clean_inputs(inputs)
         for panel, values in self.plot_stuff.items():
             # Replace selected vars with get parameters, if present
             plot_vars = list(values["vars"].keys())
@@ -128,10 +127,7 @@ class MakePlots:
             if len(selected_unit) > 0 and selected_unit[-1] in units:
                 values["selected_unit"] = selected_unit[-1]
 
-    def make(
-        self,
-        scenarios: list[dict[str, CambioVar]],
-    ) -> dict:
+    def make(self, scenarios: list[dict[str, CambioVar]]) -> dict:
         """
         Return the plots that will be displayed.
         @param scenarios  The climate model run results
@@ -239,6 +235,22 @@ class MakePlots:
             output_type="div",
             include_plotlyjs=False,
         )
+
+
+def get_display_names() -> dict[str:str]:
+    """
+    Retrun the display names for the plot
+    @returns  A dictionary of names for model and names for display
+    """
+    return {
+        "transition_year": "Year CO2 emission peaks",
+        "transition_duration": "Years to decarbonize",
+        "long_term_emissions": "Long-term CO2 emissions",
+        "albedo_feedback": "Albedo feedback",
+        "temp_anomaly_feedback": "Forest fire feedback",
+        "stochastic_c_atm_std_dev": "Noise level",
+        "scenario_name": "Scenario name",
+    }
 
 
 def get_netflux_oa(scenario):
