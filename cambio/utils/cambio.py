@@ -88,18 +88,21 @@ def cambio(inputs: CambioInputs) -> tuple[dict[str, CambioVar], dict[str, float]
     # TODO: improve this docstring
     """
     Run the cambio model
-    @param start_year  Starting year for the calculation
-    @param stop_year  Ending year for the calculation
-    @param dtime = 1.0  time resolution (years)
-    @param inv_time_constant
-    @param transition_year = 2040.0  pivot year to start decreasing CO2
-    @param transition_duration = 20.0  years over which to decrease Co2
-    @param long_term_emissions = 2.0  ongoing carbon emissions after decarbonization
-    @param For feedbacks and stochastic runs
-    @param stochastic_c_atm_std_dev  Noise level, in same units as CO2
-    @param albedo_with_no_constraint = False
-    @param albedo_feedback = False
-    @param temp_anomaly_feedback = False
+    @param inputs  Required inputs (see notes)
+    @returns  The model results
+    Notes:
+    inputs should include:
+    - start_year  Starting year for the calculation
+    - stop_year  Ending year for the calculation
+    - dtime = 1.0  time resolution (years)
+    - inv_time_constant
+    - transition_year = 2040.0  pivot year to start decreasing CO2
+    - transition_duration = 20.0  years over which to decrease Co2
+    - long_term_emissions = 2.0  ongoing carbon emissions after decarbonization
+    - stochastic_c_atm_std_dev  Noise level, in same units as CO2
+    - albedo_with_no_constraint = False
+    - albedo_feedback = False
+    - temp_anomaly_feedback = False
     """
 
     # Units of variables output by climate model:
@@ -110,7 +113,7 @@ def cambio(inputs: CambioInputs) -> tuple[dict[str, CambioVar], dict[str, float]
     # Call the LTE emissions scenario maker with these parameters
     # time is in years
     # flux_human_atm is in GtC/year
-    # would be good to output units
+    # TODO: output units
     time, flux_human_atm = make_emissions_scenario_lte(
         inputs.start_year,
         inputs.stop_year,
