@@ -118,29 +118,25 @@ class IndexViewTest(TestCase):
         #     },
         # }
         expected_inputs = {
-            "inv_time_constant": 0.025,
-            "transition_year": 2040.0,
-            "transition_duration": 20.0,
-            "long_term_emissions": 2.0,
-            "albedo_with_no_constraint": False,
+            "transition_year": 2040,
+            "transition_duration": 20,
+            "long_term_emissions": 2,
             "albedo_feedback": False,
             "temp_anomaly_feedback": False,
-            "stochastic_C_atm": False,
-            "stochastic_c_atm_std_dev": 5.0,
+            "stochastic_c_atm_std_dev": 0,
             "scenario_name": "Default",
         }
 
         old_scenario_inputs = {
             "Default": {
                 "inv_time_constant": 0.025,
-                "transition_year": 2040.0,
-                "transition_duration": 20.0,
-                "long_term_emissions": 2.0,
+                "transition_year": 2040,
+                "transition_duration": 20,
+                "long_term_emissions": 2,
                 "albedo_with_no_constraint": False,
                 "albedo_feedback": False,
                 "temp_anomaly_feedback": False,
-                "stochastic_C_atm": False,
-                "stochastic_c_atm_std_dev": 5.0,
+                "stochastic_c_atm_std_dev": 0,
                 "start_year": 1750.0,
                 "stop_year": 2200.0,
                 "dtime": 1.0,
@@ -160,6 +156,7 @@ class IndexViewTest(TestCase):
         self.assertEqual(response.status_code, 200)
 
         # Test for expected results
+        self.maxDiff = None
         self.assertEqual(response.context["old_scenario_inputs"], old_scenario_inputs)
         self.assertEqual(response.context["inputs"], expected_inputs)
         self.assertEqual(response.context["plot_scenario_choices"], plot_scen_choices)

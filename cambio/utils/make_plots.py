@@ -26,8 +26,6 @@ class MakePlots:
         """
         self.year_range = (1900.0, 2201.0)  # Year range to plot
 
-        inputs = clean_inputs(inputs)
-
         conversion_funs_general = {
             "carbon": {"GtC": return_same, "ppm": gtc_to_ppm, "GtCO2": gtc_to_gtco2},
             "flux": {"GtC/year": return_same, "GtCO2/year": gtc_to_gtco2},
@@ -57,13 +55,13 @@ class MakePlots:
             "flux": {
                 "plot": [],
                 "vars": {
-                    "F_ha": "human->atmos",
-                    "F_ao": "atmos->ocean",
-                    "F_oa": "ocean->atmos",
-                    "F_la": "land->atmos",
-                    "F_al": "atmos->land",
-                    "netflux_oa": "Net, ocean->atmos",
-                    "netflux_la": "Net, land->atmos ",
+                    "F_ha": "Human&rarr;Atmos",
+                    "F_ao": "Atmos&rarr;Ocean",
+                    "F_oa": "Ocean&rarr;Atmos",
+                    "F_la": "Land&rarr;Atmos",
+                    "F_al": "Atmos&rarr;Land",
+                    "netflux_oa": "Net, Ocean&harr;Atmos",
+                    "netflux_la": "Net, Land&harr;Atmos ",
                 },
                 "units": list(conversion_funs_general["flux"].keys()),
                 "selected_vars": ["F_ha"],
@@ -84,8 +82,8 @@ class MakePlots:
             "temp": {
                 "plot": [],
                 "vars": {
-                    "T_anomaly": "Global temperature change",
-                    "T_C": "Global temperature",
+                    "T_anomaly": "Temperature change",
+                    "T_C": "Temperature",
                 },
                 "units": list(conversion_funs_general["temp"].keys()),
                 "selected_vars": ["T_anomaly"],
@@ -115,6 +113,7 @@ class MakePlots:
             "netflux_la": get_netflux_la,
         }
 
+        inputs = clean_inputs(inputs)
         for panel, values in self.plot_stuff.items():
             # Replace selected vars with get parameters, if present
             plot_vars = list(values["vars"].keys())
@@ -128,10 +127,7 @@ class MakePlots:
             if len(selected_unit) > 0 and selected_unit[-1] in units:
                 values["selected_unit"] = selected_unit[-1]
 
-    def make(
-        self,
-        scenarios: list[dict[str, CambioVar]],
-    ) -> dict:
+    def make(self, scenarios: list[dict[str, CambioVar]]) -> dict:
         """
         Return the plots that will be displayed.
         @param scenarios  The climate model run results
@@ -186,7 +182,7 @@ class MakePlots:
         self,
         years: list[npt.NDArray[np.float64]],
         climvarvals: list[npt.NDArray[np.float64]],
-        names: list[str],
+        names_in: list[str],
         ylabel: str,
     ):
         """
@@ -197,6 +193,16 @@ class MakePlots:
         @param ylabel
         @returns a plotly plot object
         """
+
+        names = []
+        # Replace arrows with better symbols
+        for name in names_in:
+            if "&rarr;" in name:
+                name = name.replace("&rarr;", "\u2192")
+            if "&harr;" in name:
+                name = name.replace("&harr;", "\u2194")
+            names.append(name)
+
         return plot(
             {
                 "data": [
@@ -229,6 +235,22 @@ class MakePlots:
             output_type="div",
             include_plotlyjs=False,
         )
+
+
+def get_display_names() -> dict[str:str]:
+    """
+    Retrun the display names for the plot
+    @returns  A dictionary of names for model and names for display
+    """
+    return {
+        "transition_year": "Year CO2 emission peaks",
+        "transition_duration": "Years to decarbonize",
+        "long_term_emissions": "Long-term CO2 emissions",
+        "albedo_feedback": "Albedo feedback",
+        "temp_anomaly_feedback": "Forest fire feedback",
+        "stochastic_c_atm_std_dev": "Noise level",
+        "scenario_name": "Scenario name",
+    }
 
 
 def get_netflux_oa(scenario):

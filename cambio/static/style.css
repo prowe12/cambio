@@ -28,6 +28,7 @@
 
 body {
     margin: 0;
+    background-color: #13afdf;
 }
 
 
@@ -39,19 +40,31 @@ body {
     font-family: Arial, Helvetica, sans-serif;
     text-align: center;
     text-shadow: 1px 1px 3px white;
-    border-bottom: solid black 5px
+    border-bottom: solid black 2px;
 }
 
 /* Size of text boxes */
 input[type="text"] {
-    width: 60px;
+    width: 54px;
 }
 
 
-/* Create three equal columns that float next to each other */
+hr {
+    text-align: left;
+    width: 100%;
+    display: block;
+    margin-top: 0.5em;
+    margin-bottom: 0.5em;
+    margin-left: auto;
+    margin-right: auto;
+    border-style: inset;
+    border-width: 1px;
+}
+
+/* Create columns that float next to each other */
 .column1 {
     float: left;
-    width: 20%;
+    width: 25%;
     height: 100%;
     padding: 0px 10px;
     background-color: #13afdf;
@@ -59,26 +72,61 @@ input[type="text"] {
 
 .column2 {
     float: left;
-    width: 80%;
+    width: 75%;
     padding: 0px 0px;
-    border: 4px solid black;
+    background-color: white;
 }
+
 
 .graph_area {
     float: left;
-    width: 80%;
-    padding: 0px 0px;
-    border: 4px solid black;
+    width: 75%;
+    padding-left: 5px;
+    background-color: white;
 }
 
-.climate_variables {
-    background-color: #13afdf;
-    padding: 10px 24px;
-    display: block;
-    float: right;
-    width: 80%;
-    padding: 0px 15px 10px;
+p {
+    line-height: 1.3;
+    margin-top: 0px;
+    margin-bottom: 0px;
+}
 
+ol {
+    margin-top: 0px;
+    margin-left: 20px;
+    padding-left: 0px;
+}
+
+.space-above {
+    padding-top: 100px;
+}
+
+.row {
+    width: 100%;
+    flex-wrap: wrap;
+}
+
+.column-2a {
+    float: left;
+    width: 75%;
+    margin-left: 0px;
+    margin-right: 0px;
+}
+
+.column-2b {
+    float: left;
+    width: 24%;
+    margin-left: 0px;
+    margin-right: 1%;
+}
+
+
+label {
+    white-space: nowrap;
+}
+
+.wrappable {
+    white-space: normal;
 }
 
 /* Clear floats after the columns */
@@ -88,7 +136,7 @@ input[type="text"] {
     clear: both;
 }
 
-/* Responsive layout - makes the three columns stack on top of each other instead of next to each other */
+/* Responsive layout - make the columns stack on top of each other instead of next to each other */
 @media screen and (max-width:600px) {
     .column1 {
         width: 100%;
@@ -98,9 +146,4 @@ input[type="text"] {
 /* styling to hide scenario choice for unselected climate variables in top panel */
 .hidden {
     display: none;
-}
-
-.climate_variables button.selected {
-    background-color: darkgreen;
-    color: white;
 }
