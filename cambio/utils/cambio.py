@@ -85,7 +85,6 @@ from cambio.utils.cambio_utils import CambioVar
 
 
 def cambio(inputs: CambioInputs) -> tuple[dict[str, CambioVar], dict[str, float]]:
-    # TODO: improve this docstring
     """
     Run the cambio model
     @param inputs  Required inputs (see notes)
