@@ -9,12 +9,12 @@ from pydantic import BaseModel
 
 
 class BaseInputs(BaseModel):
-    """Class for default inputs to CAMBIO"""
+    """Class for default inputs to CAMBIO that the user can change"""
 
     transition_year: float = 2040
     transition_duration: float = 20
     long_term_emissions: float = 2
-    albedo_feedback: bool = False
+    albedo_transition_temperature: float = 2
     temp_anomaly_feedback: bool = False
     stochastic_c_atm_std_dev: float = 0
 
@@ -56,14 +56,18 @@ class BaseInputs(BaseModel):
 
 class CambioInputs(BaseInputs):
     """
-    Set additional inputs to CAMBIO that the user does not specify
+    Set additional default values for inputs to CAMBIO that the user does not specify
     """
 
+    # Default values
+    # albedo_with_no_constraint = True says that the albedo can change by more than
+    #   a specified amount (hard-wired into cambio) per year
     start_year: float = 1750.0
     stop_year: float = 2200.0
     dtime: float = 1.0
     inv_time_constant: float = 0.025
     albedo_with_no_constraint: bool = False
+    albedo_feedback: bool = True
 
 
 class ScenarioInputs(BaseInputs):
