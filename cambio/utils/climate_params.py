@@ -39,14 +39,16 @@ class ClimateParams:
     # Parameters for albedo feedback
     # Based on our radiative balance sensitivity analysis
     albedo_sensitivity = -100.0
-    # T at which significant albedo reduction kicks in (a guess)
-    albedo_transition_temperature = 2.0
     # Temperature range over which albedo reduction kicks in (a guess)
     albedo_transition_interval = 1.0
     # Amount albedo can change in a year (based on measurements)
     max_albedo_change_rate = 0.0006
     # Maximum of 10% reduction in albedo (a guess)
     fractional_albedo_floor = 0.9
+
+    # The following is now a user input
+    # T at which significant albedo reduction kicks in (a guess)
+    # albedo_transition_temperature = 2.0
 
     # Parameters for the atmosphere->land flux feedback
     # T anomaly at which photosynthesis will become impaired (a guess)
@@ -148,7 +150,11 @@ class ClimateParams:
         return ClimateParams.k_la
 
     def diagnose_albedo_w_constraint(
-        self, temp_anom: float, prev_albedo: float = 0, dtime: float = 0
+        self,
+        trans_temp: float,
+        temp_anom: float,
+        prev_albedo: float = 0,
+        dtime: float = 0,
     ) -> float:
         """
         Return the albedo as a function of temperature, constrained so the
@@ -160,7 +166,7 @@ class ClimateParams:
         @returns albedo
         """
         # Find the albedo without constraint
-        albedo = self.diagnose_albedo(temp_anom)
+        albedo = self.diagnose_albedo(trans_temp, temp_anom)
 
         # Applying a constraint, if called for
         if (prev_albedo != 0) & (dtime != 0):
@@ -171,18 +177,18 @@ class ClimateParams:
                 albedo = prev_albedo + this_albedo_change
         return albedo
 
-    def diagnose_albedo(self, temp_anom: float) -> float:
+    def diagnose_albedo(self, trans_temp: float, temp_anom: float) -> float:
         """
         Return the albedo as a function of temperature anomaly
 
         @param temp_anomaly
         @returns albedo
         """
-        temp = ClimateParams.albedo_transition_temperature
+        # trans_temp was previously ClimateParams.albedo_transition_temperature
         interval = ClimateParams.albedo_transition_interval
         floor = ClimateParams.fractional_albedo_floor
         preind_albedo = ClimateParams.preindust_albedo
-        albedo = sigmafloor(temp_anom, temp, interval, floor) * preind_albedo
+        albedo = sigmafloor(temp_anom, trans_temp, interval, floor) * preind_albedo
         return albedo
 
     def diagnose_delta_t_from_albedo(self, albedo: float) -> float:
