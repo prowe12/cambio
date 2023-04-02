@@ -114,8 +114,6 @@ class ManageInputs:
     def include_default(self):
         """
         Always include default scenario in the list of scenarios
-        @params scenario_inputs
-        @params
         """
         if self.default not in self.scenario_inputs:
             dflt_params = {
@@ -125,6 +123,7 @@ class ManageInputs:
                 "long_term_emissions": [""],
                 "albedo_with_no_constraint": [""],
                 "albedo_feedback": [""],
+                "albedo_transition_temperature": [""],
                 "temp_anomaly_feedback": [""],
                 "stochastic_c_atm_std_dev": [""],
                 "scenario_name": ["hi"],
@@ -140,33 +139,33 @@ class ManageInputs:
             self.scenario_inputs[self.default] = CambioInputs.from_dict(dflt_params)
 
 
-def include_default(scenario_inputs, default: str):
-    """
-    Always include default scenario in the list of scenarios
-    @params scenario_inputs
-    @params
-    """
-    if default not in scenario_inputs:
-        dflt_params = {
-            "inv_time_constant": [""],
-            "transition_year": [""],
-            "transition_duration": [""],
-            "long_term_emissions": [""],
-            "albedo_with_no_constraint": [""],
-            "albedo_feedback": [""],
-            "temp_anomaly_feedback": [""],
-            "stochastic_c_atm_std_dev": [""],
-            "scenario_name": ["hi"],
-            "F_ha": ["on"],
-            "flux": ["GtC/year"],
-            "C_atm": ["on"],
-            "carbon": ["GtC"],
-            "T_anomaly": ["on"],
-            "temp": ["C"],
-            "pH": ["on"],
-            "albedo": ["on"],
-        }
-        scenario_inputs[default] = CambioInputs.from_dict(dflt_params)
+# def include_default(scenario_inputs, default: str):
+#     """
+#     Always include default scenario in the list of scenarios
+#     @params scenario_inputs
+#     @params
+#     """
+#     if default not in scenario_inputs:
+#         dflt_params = {
+#             "inv_time_constant": [""],
+#             "transition_year": [""],
+#             "transition_duration": [""],
+#             "long_term_emissions": [""],
+#             "albedo_with_no_constraint": [""],
+#             "albedo_transition_temperature": [""],
+#             "temp_anomaly_feedback": [""],
+#             "stochastic_c_atm_std_dev": [""],
+#             "scenario_name": ["hi"],
+#             "F_ha": ["on"],
+#             "flux": ["GtC/year"],
+#             "C_atm": ["on"],
+#             "carbon": ["GtC"],
+#             "T_anomaly": ["on"],
+#             "temp": ["C"],
+#             "pH": ["on"],
+#             "albedo": ["on"],
+#         }
+#         scenario_inputs[default] = CambioInputs.from_dict(dflt_params)
 
 
 def is_in_request(request: HttpRequest, name) -> bool:
