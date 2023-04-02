@@ -168,6 +168,7 @@ class MakePlots:
                             raise ValueError("Variable cannot be plotted")
 
                     yvals = conversion_fun(scenario[name])
+                    print(np.size(yvals))
                     inds = get_years_to_plot(year, self.year_range)
 
                     years.append(year[inds])
@@ -246,7 +247,7 @@ def get_display_names() -> dict[str:str]:
         "transition_year": "Year CO2 emission peaks",
         "transition_duration": "Years to decarbonize",
         "long_term_emissions": "Long-term CO2 emissions",
-        "albedo_feedback": "Albedo feedback",
+        "albedo_transition_temperature": "Albedo tipping point",
         "temp_anomaly_feedback": "Forest fire feedback",
         "stochastic_c_atm_std_dev": "Noise level",
         "scenario_name": "Scenario name",
