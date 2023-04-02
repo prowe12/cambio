@@ -85,32 +85,42 @@ from cambio.utils.cambio_utils import CambioVar
 
 
 def cambio(inputs: CambioInputs) -> tuple[dict[str, CambioVar], dict[str, float]]:
-    # TODO: improve this docstring
     """
     Run the cambio model
-    @param start_year  Starting year for the calculation
-    @param stop_year  Ending year for the calculation
-    @param dtime = 1.0  time resolution (years)
-    @param inv_time_constant
-    @param transition_year = 2040.0  pivot year to start decreasing CO2
-    @param transition_duration = 20.0  years over which to decrease Co2
-    @param long_term_emissions = 2.0  ongoing carbon emissions after decarbonization
-    @param For feedbacks and stochastic runs
-    @param stochastic_c_atm_std_dev  Noise level, in same units as CO2
-    @param albedo_with_no_constraint = False
-    @param albedo_feedback = False
-    @param temp_anomaly_feedback = False
+    @param inputs  Required inputs (see notes)
+    @returns  The model results
+    Notes:
+    Inputs must include:
+    - start_year  Starting year for the calculation
+    - stop_year  Ending year for the calculation
+    - dtime = 1.0  time resolution (years)
+    - inv_time_constant
+    - transition_year = 2040.0  pivot year to start decreasing CO2
+    - transition_duration = 20.0  years over which to decrease Co2
+    - long_term_emissions = 2.0  ongoing carbon emissions after decarbonization
+    - stochastic_c_atm_std_dev  Noise level, in same units as CO2
+    - albedo_with_no_constraint = False
+    - albedo_feedback = False
+    - temp_anomaly_feedback = False
+    Outputs include:
+    - C_atm  carbon amount in atmosphere, GtC
+    - C_ocean  carbon amount in ocean, GtC
+    - albedo  Earth's albedo
+    - T_anomaly  temperature anomaly, K
+    - pH  ocean pH
+    - T_C  temperature, deg C
+    - F_ha  flux human-atmosphere, GtC/year
+    - F_ao  flux atmosphere-ocean, GtC/year
+    - F_oa  flux ocean-atmosphere, GtC/year
+    - F_la  flux land-atmosphere, GtC/year
+    - F_al  flux atmosphere-land, GtC/year
+    - year
     """
-
-    # Units of variables output by climate model:
-    # C_atm and C_ocean: GtC, I think
-    # T_anomaly: K
-    # f_al, f_la, f_ao, f_oa, f_ha: GtC/year
 
     # Call the LTE emissions scenario maker with these parameters
     # time is in years
     # flux_human_atm is in GtC/year
-    # would be good to output units
+    # TODO: output units
     time, flux_human_atm = make_emissions_scenario_lte(
         inputs.start_year,
         inputs.stop_year,
@@ -171,6 +181,7 @@ def cambio(inputs: CambioInputs) -> tuple[dict[str, CambioVar], dict[str, float]
             flux_human_atm[i],
             inputs.albedo_with_no_constraint,
             inputs.albedo_feedback,
+            inputs.albedo_transition_temperature,
             stochastic_c_atm,
             inputs.temp_anomaly_feedback,
         )
@@ -195,6 +206,7 @@ def propagate_climate_state(
     f_ha: float = 0,
     albedo_with_no_constraint: bool = False,
     albedo_feedback: bool = False,
+    albedo_transition_temperature: float = 2,
     stochastic_c_atm: bool = False,
     temp_anomaly_feedback: bool = False,
 ) -> dict[str, float]:
@@ -237,18 +249,29 @@ def propagate_climate_state(
     c_atm += (f_la + f_oa - f_ao - f_al + f_ha) * dtime
     c_ocean += (f_ao - f_oa) * dtime
 
-    # Get albedo from temperature anomaly (optionally activating a
+    # If the albedo feedback is turned on,
+    # get albedo from temperature anomaly (optionally activating a
     # constraint in case it's changing too fast)
-    if albedo_with_no_constraint:
-        albedo = climateParams.diagnose_albedo_w_constraint(
-            t_anom, prev_climatestate["albedo"], dtime
-        )
-    else:
-        albedo = climateParams.diagnose_albedo_w_constraint(t_anom)
-
-    # Get a new temperature anomaly as impacted by albedo (if we want it)
+    # Otherwise keep it constant
     if albedo_feedback:
+        if albedo_with_no_constraint:
+            albedo = climateParams.diagnose_albedo_w_constraint(
+                albedo_transition_temperature,
+                t_anom,
+                prev_climatestate["albedo"],
+                dtime,
+            )
+        else:
+            albedo = climateParams.diagnose_albedo_w_constraint(
+                albedo_transition_temperature, t_anom
+            )
+
+        # Get a new temperature anomaly as impacted by albedo (if we want it)
         t_anom += climateParams.diagnose_delta_t_from_albedo(albedo)
+
+    else:
+        albedo = prev_climatestate["albedo"]
+        # The t_anom was set previously and does not change
 
     # Stochasticity in the model (if we want it)
     if stochastic_c_atm:

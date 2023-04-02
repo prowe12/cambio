@@ -121,7 +121,7 @@ class IndexViewTest(TestCase):
             "transition_year": 2040,
             "transition_duration": 20,
             "long_term_emissions": 2,
-            "albedo_feedback": False,
+            "albedo_transition_temperature": 2,
             "temp_anomaly_feedback": False,
             "stochastic_c_atm_std_dev": 0,
             "scenario_name": "Default",
@@ -129,19 +129,21 @@ class IndexViewTest(TestCase):
 
         old_scenario_inputs = {
             "Default": {
-                "inv_time_constant": 0.025,
                 "transition_year": 2040,
                 "transition_duration": 20,
                 "long_term_emissions": 2,
+                "albedo_feedback": True,
+                "albedo_transition_temperature": 2,
                 "albedo_with_no_constraint": False,
-                "albedo_feedback": False,
                 "temp_anomaly_feedback": False,
                 "stochastic_c_atm_std_dev": 0,
                 "start_year": 1750.0,
                 "stop_year": 2200.0,
                 "dtime": 1.0,
+                "inv_time_constant": 0.025,
             }
         }
+        # "albedo_with_no_constraint": False,
 
         plot_scen_choices = [["Default", "plot_scenario_Default"]]
 
@@ -157,6 +159,51 @@ class IndexViewTest(TestCase):
 
         # Test for expected results
         self.maxDiff = None
+        # self.assertEqual(
+        #     response.context["old_scenario_inputs"]["Default"]["transition_year"],
+        #     old_scenario_inputs["Default"]["transition_year"],
+        # )
+        # self.assertEqual(
+        #     response.context["old_scenario_inputs"]["Default"]["transition_duration"],
+        #     old_scenario_inputs["Default"]["transition_duration"],
+        # )
+        # self.assertEqual(
+        #     response.context["old_scenario_inputs"]["Default"]["long_term_emissions"],
+        #     old_scenario_inputs["Default"]["long_term_emissions"],
+        # )
+        # self.assertEqual(
+        #     response.context["old_scenario_inputs"]["Default"]["albedo_feedback"],
+        #     old_scenario_inputs["Default"]["albedo_feedback"],
+        # )
+        # self.assertEqual(
+        #     response.context["old_scenario_inputs"]["Default"][
+        #         "albedo_transition_temperature"
+        #     ],
+        #     old_scenario_inputs["Default"]["albedo_transition_temperature"],
+        # )
+        # self.assertEqual(
+        #     response.context["old_scenario_inputs"]["Default"]["temp_anomaly_feedback"],
+        #     old_scenario_inputs["Default"]["temp_anomaly_feedback"],
+        # )
+        # self.assertEqual(
+        #     response.context["old_scenario_inputs"]["Default"][
+        #         "stochastic_c_atm_std_dev"
+        #     ],
+        #     old_scenario_inputs["Default"]["stochastic_c_atm_std_dev"],
+        # )
+        # self.assertEqual(
+        #     response.context["old_scenario_inputs"]["Default"]["start_year"],
+        #     old_scenario_inputs["Default"]["start_year"],
+        # )
+        # self.assertEqual(
+        #     response.context["old_scenario_inputs"]["Default"]["stop_year"],
+        #     old_scenario_inputs["Default"]["stop_year"],
+        # )
+        # self.assertEqual(
+        #     response.context["old_scenario_inputs"]["Default"]["dtime"],
+        #     old_scenario_inputs["Default"]["dtime"],
+        # )
+
         self.assertEqual(response.context["old_scenario_inputs"], old_scenario_inputs)
         self.assertEqual(response.context["inputs"], expected_inputs)
         self.assertEqual(response.context["plot_scenario_choices"], plot_scen_choices)
