@@ -46,17 +46,17 @@ class ClimateParams:
     # Maximum of 10% reduction in albedo (a guess)
     fractional_albedo_floor = 0.9
 
-    # The following is now a user input
-    # T at which significant albedo reduction kicks in (a guess)
-    # albedo_transition_temperature = 2.0
-
     # Parameters for the atmosphere->land flux feedback
-    # T anomaly at which photosynthesis will become impaired (a guess)
-    flux_al_transition_temp = 2.5
     # Temperature range over which photosynthesis impairment kicks in (guess)
     flux_al_transition_temp_interval = 1.0
     # Maximum of 10% reduction in F_al (a guess)
     fractional_flux_al_floor = 0.9
+
+    # The following are now user inputs
+    # T at which significant albedo reduction kicks in (a guess)
+    # albedo_transition_temp = 2.0
+    # T anomaly at which photosynthesis will become impaired (a guess)
+    # flux_al_transition_temp = 2.5
 
     def __init__(self, stochastic_c_atm_std_dev: float = 0.1) -> None:
         """
@@ -121,7 +121,9 @@ class ClimateParams:
         k_oa = ClimateParams.k_oa
         return k_oa * (1 + ocean_degas_ff * temp_anomaly) * c_ocean
 
-    def diagnose_flux_atm_land(self, temp_anomaly: float, c_atm: float) -> float:
+    def diagnose_flux_atm_land(
+        self, temp_anomaly: float, c_atm: float, flux_al_transition_temp: float
+    ) -> float:
         """
         Compute the terrestrial carbon sink
 
@@ -134,7 +136,7 @@ class ClimateParams:
 
         sigma_floor_val = sigmafloor(
             temp_anomaly,
-            ClimateParams.flux_al_transition_temp,
+            flux_al_transition_temp,
             ClimateParams.flux_al_transition_temp_interval,
             ClimateParams.fractional_flux_al_floor,
         )
