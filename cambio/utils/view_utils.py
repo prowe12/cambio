@@ -4,7 +4,7 @@ By Penny Rowe and Daniel Neshyba-Rowe
 
 """
 
-from django.http import HttpRequest, HttpResponse
+from django.http import HttpRequest
 
 from cambio.utils.cambio import cambio
 from cambio.utils.schemas import CambioInputs
@@ -123,10 +123,10 @@ class ManageInputs:
                 "long_term_emissions": [""],
                 "albedo_with_no_constraint": [""],
                 "albedo_feedback": [""],
-                "albedo_transition_temperature": [""],
-                "temp_anomaly_feedback": [""],
+                "albedo_transition_temp": [""],
+                "flux_al_transition_temp": [""],
                 "stochastic_c_atm_std_dev": [""],
-                "scenario_name": ["hi"],
+                "scenario_name": [""],
                 "F_ha": ["on"],
                 "flux": ["GtC/year"],
                 "C_atm": ["on"],
