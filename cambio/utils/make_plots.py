@@ -47,21 +47,24 @@ class MakePlots:
             "netflux_la": conversion_funs_general["flux"],
             "T_C": conversion_funs_general["temp"],
             "T_anomaly": conversion_funs_general["temp_anomaly"],
+            "albedo_trans_temp": conversion_funs_general["temp_anomaly"],
+            "flux_al_trans_temp": conversion_funs_general["temp_anomaly"],
             "pH": conversion_funs_general["none"],
             "albedo": conversion_funs_general["none"],
         }
+        # "temp_anomaly_feedback": conversion_funs_general["temp_anomaly"],
 
         self.plot_stuff = {
             "flux": {
                 "plot": [],
                 "vars": {
-                    "F_ha": "Human&rarr;Atmos",
-                    "F_ao": "Atmos&rarr;Ocean",
-                    "F_oa": "Ocean&rarr;Atmos",
-                    "F_la": "Land&rarr;Atmos",
-                    "F_al": "Atmos&rarr;Land",
-                    "netflux_oa": "Net, Ocean&harr;Atmos",
-                    "netflux_la": "Net, Land&harr;Atmos ",
+                    "F_ha": ["Human&rarr;Atmos", "solid"],
+                    "F_ao": ["Atmos&rarr;Ocean", "20px"],
+                    "F_oa": ["Ocean&rarr;Atmos", "longdashdot"],
+                    "F_la": ["Land&rarr;Atmos", "longdash"],
+                    "F_al": ["Atmos&rarr;Land", "dashdot"],
+                    "netflux_oa": ["Net, Ocean&harr;Atmos", "dot"],
+                    "netflux_la": ["Net, Land&harr;Atmos ", "dash"],
                 },
                 "units": list(conversion_funs_general["flux"].keys()),
                 "selected_vars": ["F_ha"],
@@ -71,8 +74,8 @@ class MakePlots:
             "carbon": {
                 "plot": [],
                 "vars": {
-                    "C_atm": "Atmospheric",
-                    "C_ocean": "Oceanic",
+                    "C_atm": ["Atmospheric", "solid"],
+                    "C_ocean": ["Oceanic", "dash"],
                 },
                 "units": list(conversion_funs_general["carbon"].keys()),
                 "selected_vars": ["C_atm"],
@@ -82,8 +85,10 @@ class MakePlots:
             "temp": {
                 "plot": [],
                 "vars": {
-                    "T_anomaly": "Temperature change",
-                    "T_C": "Temperature",
+                    "T_anomaly": ["Temperature change", "solid"],
+                    "T_C": ["Temperature", "longdash"],
+                    "albedo_trans_temp": ["Tipping Pt: albedo", "dashdot"],
+                    "flux_al_trans_temp": ["Tipping Pt: forest", "dot"],
                 },
                 "units": list(conversion_funs_general["temp"].keys()),
                 "selected_vars": ["T_anomaly"],
@@ -92,7 +97,7 @@ class MakePlots:
             },
             "pH": {
                 "plot": [],
-                "vars": {"pH": "pH"},
+                "vars": {"pH": ["pH", "solid"]},
                 "units": [],
                 "selected_vars": ["pH"],
                 "selected_unit": "",
@@ -100,7 +105,7 @@ class MakePlots:
             },
             "albedo": {
                 "plot": [],
-                "vars": {"albedo": "albedo"},
+                "vars": {"albedo": ["albedo", "solid"]},
                 "units": [],
                 "selected_vars": ["albedo"],
                 "selected_unit": "",
@@ -114,10 +119,12 @@ class MakePlots:
         }
 
         inputs = clean_inputs(inputs)
+
         for panel, values in self.plot_stuff.items():
             # Replace selected vars with get parameters, if present
             plot_vars = list(values["vars"].keys())
             selected_vars = [x for x in inputs.keys() if x in plot_vars]
+
             if len(selected_vars) > 0:
                 values["selected_vars"] = selected_vars
 
@@ -141,26 +148,39 @@ class MakePlots:
         # For each variable to plot
         for values in self.plot_stuff.values():
             legend_labels: list[str] = []
+            line_colors: list[str] = []
+            line_styles: list[str] = []
             years: list[CambioVar] = []
             climvarvals: list[float | CambioVar] = []
 
             # Loop over variables to plot in each panel
+            # These correspond to the instance variables defined in the constructor
             for name in values["selected_vars"]:
+                # Get units, conversion functions, labels, and line styles from the
+                # instance variables defined in the constructor
                 unit = values["selected_unit"]
                 conversion_fun = self.conversion_funs[name][unit]
 
-                label = values["vars"][name]
+                # TODO
+                print()
+                print(values["vars"][name][0])
+                print()
+
+                label = values["vars"][name][0]
+                line_style = values["vars"][name][1]
                 if len(unit) > 0:
                     unit = f"({unit})"
                 ylabel = f"{values['label']}  {unit}"
 
-                # Loop over the scenarios and append the variables needed for the plot
-                for scenario in scenarios:
+                # Loop over the scenarios input to this method, which represent the climate
+                # model results, and append the variables that will be plotted
+                for iscen, scenario in enumerate(scenarios):
                     scenario_id = scenario["scenario_id"]
                     year = scenario["year"]
 
                     # Get variables derived from other variables
                     if name not in scenario:
+                        # Set input variables that will be plotted
                         if name in self.derived_inputs:
                             myfun = self.derived_inputs[name]
                             scenario[name] = myfun(scenario)
@@ -168,14 +188,34 @@ class MakePlots:
                             raise ValueError("Variable cannot be plotted")
 
                     yvals = conversion_fun(scenario[name])
-                    print(np.size(yvals))
                     inds = get_years_to_plot(year, self.year_range)
 
-                    years.append(year[inds])
-                    climvarvals.append(yvals[inds])
-                    legend_labels.append(f"{scenario_id}: {label}")
+                    if len(yvals) == len(year):
+                        years.append(year[inds])
+                        climvarvals.append(yvals[inds])
+                    elif len(yvals) == 1:
+                        # Constant values
+                        years.append(np.array([year[inds[0]], year[inds[-1]]]))
+                        climvarvals.append(np.array([yvals[0], yvals[0]]))
+                    else:
+                        raise ValueError("Bad length for variable to plot")
+
+                    # Unique legend label and line color for each scenario
+                    legend_labels.append(f"{label}: {scenario_id}")
+                    line_colors.append(getcolor(iscen))
+
+                    # Unique line style for each variable plotted (e.g. name)
+                    line_styles.append(line_style)
+
             # Set all the plots for this panel
-            values["plot"] = self.plot_panel(years, climvarvals, legend_labels, ylabel)
+            values["plot"] = self.plot_panel(
+                years,
+                climvarvals,
+                legend_labels,
+                ylabel,
+                line_colors,
+                line_styles,
+            )
 
         return self.plot_stuff
 
@@ -185,6 +225,8 @@ class MakePlots:
         climvarvals: list[npt.NDArray[np.float64]],
         names_in: list[str],
         ylabel: str,
+        line_colors: list[str],
+        line_styles: list[str],
     ):
         """
         Return a plot
@@ -213,11 +255,12 @@ class MakePlots:
                         mode="lines",
                         name=name,
                         opacity=0.8,
-                        marker_color=getcolor(i),
+                        marker_color=line_color,
+                        line_dash=line_style,
                         showlegend=True,
                     )
-                    for i, (xvals, yvals, name) in enumerate(
-                        zip(years, climvarvals, names)
+                    for i, (xvals, yvals, name, line_color, line_style) in enumerate(
+                        zip(years, climvarvals, names, line_colors, line_styles)
                     )
                 ],
                 "layout": {
@@ -247,18 +290,29 @@ def get_display_names() -> dict[str:str]:
         "transition_year": "Year CO2 emission peaks",
         "transition_duration": "Years to decarbonize",
         "long_term_emissions": "Long-term CO2 emissions",
-        "albedo_transition_temperature": "Albedo tipping point",
-        "temp_anomaly_feedback": "Forest fire feedback",
+        "albedo_transition_temp": "Albedo tipping point",
+        "flux_al_transition_temp": "Forest tipping point",
         "stochastic_c_atm_std_dev": "Noise level",
         "scenario_name": "Scenario name",
     }
+    # "temp_anomaly_feedback": "Forest fire feedback",
 
 
-def get_netflux_oa(scenario):
+def get_netflux_oa(scenario: dict[float]):
+    """
+    Compute the net flux from ocean to atmosphere
+    @param scenario  The climate model outputs
+    @returns  The net flux from ocean to atmosphere
+    """
     return scenario["F_oa"] - scenario["F_ao"]
 
 
 def get_netflux_la(scenario):
+    """
+    Compute the net flux from land to atmosphere
+    @param scenario  The climate model outputs
+    @returns  The net flux from land to atmosphere
+    """
     return scenario["F_la"] - scenario["F_al"]
 
 
@@ -271,13 +325,14 @@ def return_same(inp: float) -> float:
     return inp
 
 
-def dt_c_to_dt_f(dtemp: float) -> float:
+def dt_c_to_dt_f(dtemp: np.ndarray[float]) -> np.ndarray[float]:
     """
     Convert temperature change in Celsius to temperature change
     in Fahrenheit
     @param dtemp  Temperature change in Celsius
     @returns  Temperature in Fahrenheit
     """
+    print(type(dtemp))
     return dtemp * 9 / 5
 
 
