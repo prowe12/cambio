@@ -1,3 +1,8 @@
+"""
+By Penny Rowe and Daniel Neshyba-Rowe
+2022/12/21
+"""
+
 from django.test import TestCase
 from django.urls import reverse
 import requests
@@ -59,9 +64,6 @@ class IndexViewTest(TestCase):
         self.assertTrue("plot_scenario_ids" in response.context)
         self.assertTrue("inputs" in response.context)
 
-        # TODO: delete
-        #         self.assertTrue("scenarios" in response.context)
-
     def test_with_no_user_input(self):
         """
         Test that the context vars are as expected with no user input or cookies
@@ -120,10 +122,10 @@ class IndexViewTest(TestCase):
         expected_inputs = {
             "transition_year": 2040,
             "transition_duration": 20,
-            "long_term_emissions": 2,
-            "albedo_transition_temperature": 2,
-            "temp_anomaly_feedback": False,
-            "stochastic_c_atm_std_dev": 0,
+            "long_term_emissions": 2.0,
+            "albedo_transition_temp": 4.0,
+            "stochastic_c_atm_std_dev": 0.0,
+            "flux_al_transition_temp": 3.9,
             "scenario_name": "Default",
         }
 
@@ -131,12 +133,13 @@ class IndexViewTest(TestCase):
             "Default": {
                 "transition_year": 2040,
                 "transition_duration": 20,
-                "long_term_emissions": 2,
+                "long_term_emissions": 2.0,
                 "albedo_feedback": True,
-                "albedo_transition_temperature": 2,
+                "albedo_transition_temp": 4.0,
                 "albedo_with_no_constraint": False,
-                "temp_anomaly_feedback": False,
-                "stochastic_c_atm_std_dev": 0,
+                "temp_anomaly_feedback": True,
+                "stochastic_c_atm_std_dev": 0.0,
+                "flux_al_transition_temp": 3.9,
                 "start_year": 1750.0,
                 "stop_year": 2200.0,
                 "dtime": 1.0,
