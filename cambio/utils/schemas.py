@@ -13,10 +13,10 @@ class BaseInputs(BaseModel):
 
     transition_year: float = 2040
     transition_duration: float = 20
-    long_term_emissions: float = 2
-    albedo_transition_temperature: float = 2
-    temp_anomaly_feedback: bool = False
-    stochastic_c_atm_std_dev: float = 0
+    long_term_emissions: float = 2.0
+    albedo_transition_temp: float = 4.0
+    stochastic_c_atm_std_dev: float = 0.0
+    flux_al_transition_temp: float = 3.9
 
     @classmethod
     def from_dict(cls, input_dict: dict[str, str] | QueryDict):
@@ -68,6 +68,7 @@ class CambioInputs(BaseInputs):
     inv_time_constant: float = 0.025
     albedo_with_no_constraint: bool = False
     albedo_feedback: bool = True
+    temp_anomaly_feedback: bool = True
 
 
 class ScenarioInputs(BaseInputs):
