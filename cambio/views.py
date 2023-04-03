@@ -9,9 +9,8 @@ from django.shortcuts import render
 from django.http import HttpRequest, HttpResponse
 
 from cambio.utils.view_utils import ManageInputs, run_model_for_dict
-from cambio.utils.view_utils import get_scenarios, is_in_request
 from cambio.utils.make_plots import MakePlots, get_display_names
-from cambio.utils.schemas import CambioInputs, ScenarioInputs
+from cambio.utils.schemas import ScenarioInputs
 
 
 def index(request: HttpRequest) -> HttpResponse:
@@ -28,6 +27,9 @@ def index(request: HttpRequest) -> HttpResponse:
 
     # Run the model on old and new inputs to get the climate model results
     scenario_inputs = manageInputs.get()
+
+    # Model output: scenarios: dict[str, dict[str, CambioVar]]
+    # where scenarios[scenario_id] is a dictionary with model output
     scenarios = run_model_for_dict(scenario_inputs)
 
     # Always plot any checked scenarios
