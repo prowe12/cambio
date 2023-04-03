@@ -181,14 +181,19 @@ def cambio(inputs: CambioInputs) -> tuple[dict[str, CambioVar], dict[str, float]
             flux_human_atm[i],
             inputs.albedo_with_no_constraint,
             inputs.albedo_feedback,
-            inputs.albedo_transition_temperature,
+            inputs.albedo_transition_temp,
             stochastic_c_atm,
+            inputs.flux_al_transition_temp,
             inputs.temp_anomaly_feedback,
         )
 
         # Append to climate variables
         for key, value in climatestate.items():
             climate[key][i] = value
+
+    # Add variables that are constants
+    climate["albedo_trans_temp"] = np.array([inputs.albedo_transition_temp])
+    climate["flux_al_trans_temp"] = np.array([inputs.flux_al_transition_temp])
 
     # QC: make sure the input and output times and human co2 emissions are same
     if not is_same(time, climate["year"]):
@@ -206,10 +211,12 @@ def propagate_climate_state(
     f_ha: float = 0,
     albedo_with_no_constraint: bool = False,
     albedo_feedback: bool = False,
-    albedo_transition_temperature: float = 2,
+    albedo_transition_temp: float = 2,
     stochastic_c_atm: bool = False,
+    flux_al_transition_temp: float = 4,
     temp_anomaly_feedback: bool = False,
 ) -> dict[str, float]:
+
     """
     Propagate the state of the climate, with a specified anthropogenic
     carbon flux
@@ -237,9 +244,11 @@ def propagate_climate_state(
     # (via photosynthesis reduction)
     f_oa = climateParams.diagnose_flux_ocean_atm(c_ocean, t_anom)
     if temp_anomaly_feedback:
-        f_al = climateParams.diagnose_flux_atm_land(t_anom, c_atm)
+        f_al = climateParams.diagnose_flux_atm_land(
+            t_anom, c_atm, flux_al_transition_temp
+        )
     else:
-        f_al = climateParams.diagnose_flux_atm_land(0, c_atm)
+        f_al = climateParams.diagnose_flux_atm_land(0, c_atm, flux_al_transition_temp)
 
     # Get other fluxes resulting from carbon concentrations
     f_ao = climateParams.diagnose_flux_atm_ocean(c_atm)
@@ -256,14 +265,14 @@ def propagate_climate_state(
     if albedo_feedback:
         if albedo_with_no_constraint:
             albedo = climateParams.diagnose_albedo_w_constraint(
-                albedo_transition_temperature,
+                albedo_transition_temp,
                 t_anom,
                 prev_climatestate["albedo"],
                 dtime,
             )
         else:
             albedo = climateParams.diagnose_albedo_w_constraint(
-                albedo_transition_temperature, t_anom
+                albedo_transition_temp, t_anom
             )
 
         # Get a new temperature anomaly as impacted by albedo (if we want it)
