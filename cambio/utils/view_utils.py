@@ -206,7 +206,7 @@ def run_model_for_dict(
     # scenarios: dict[dict[str, CambioVar]] = {}
     scenarios: dict[str, dict[str, CambioVar]] = {}
     for scenario_id, scenario_input in scenario_inputs.items():
-        climate, _ = cambio(scenario_input)
+        climate = cambio(scenario_input)
         climate["scenario_id"] = scenario_id
         scenarios[scenario_id] = climate
     return scenarios
