@@ -9,6 +9,7 @@ Created on Wed Dec 21 15:49:24 2022
 import numpy as np
 
 from cambio.utils.cambio_utils import sigmafloor
+from cambio.utils.schemas import CambioInputs
 
 
 class ClimateState:
@@ -44,6 +45,57 @@ class ClimateState:
         self.flux_al: float = 0
         self.flux_la: float = 0
         self.year: float = time0 - dtime
+
+    def propagate(self, climateParams: CambioInputs, flux_ha: float) -> None:
+        """
+        Propagate the state of the climate, with a specified anthropogenic
+        carbon flux
+        @param climateState  The current state of the climate, which is modified here
+        @param climateParams  Climate Parameters (constants that should never be modified!)
+        """
+
+        # Update the human-to-atmosphere
+        self.update_flux_ha(flux_ha)
+
+        climate_params = climateParams.dict()
+
+        # Only turn on noise if the noise level is > 0
+        stochastic_c_atm = bool(climate_params["stochastic_c_atm_std_dev"] > 0)
+
+        # Get the temperature anomaly resulting from carbon concentrations
+        self.diagnose_temp_anomaly(climate_params)
+
+        # Get fluxes, optionally activating the impact temperature has on land
+        # (via photosynthesis reduction)
+        # TODO: make sure diagnose_flux_oa has if/else as for f_al
+        self.diagnose_flux_ocean_atm(climate_params)
+        self.diagnose_flux_atm_land(climate_params)
+
+        # Get other fluxes resulting from carbon concentrations
+        self.diagnose_flux_atm_ocean(climate_params)
+        self.diagnose_flux_land_atm(climate_params)
+
+        # Update concentrations of carbon based on these fluxes
+        self.update_c_atm(climate_params["dtime"])
+        self.update_c_ocean(climate_params["dtime"])
+
+        # If albedo feedback is turned on, get albedo from temperature anomaly
+        # (optionally activating a constraint in case it's changing too fast)
+        # Otherwise keep it constant
+        if climate_params["albedo_feedback"]:
+            self.diagnose_albedo_w_constraint(climate_params)
+            # Get a new temperature anomaly as impacted by albedo
+            self.diagnose_delta_t_from_albedo(climate_params)
+
+        # Add stochasticity (random noise) to atmospheric carbon amount, if indicated
+        # TODO: this is not tested
+        if stochastic_c_atm:
+            self.diagnose_stochastic_c_atm(climate_params)
+
+        # Ordinary diagnostics
+        self.diagnose_ocean_surface_ph(climate_params)
+        self.diagnose_actual_temperature()
+        self.update_year(climate_params["dtime"])
 
     def diagnose_ocean_surface_ph(self, climate_params: dict[str, float]):
         """
@@ -202,6 +254,10 @@ class ClimateState:
         self.c_ocean += (self.flux_ao - self.flux_oa) * dtime
 
     def update_flux_ha(self, flux_human_atm: float):
+        """
+        Replace the value of flux_ha with the new value
+        @param flux_human_atm  Carbon flux from human emissions to atmosphere
+        """
         self.flux_ha = flux_human_atm
 
     def diagnose_actual_temperature(self):

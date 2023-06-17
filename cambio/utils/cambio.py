@@ -76,10 +76,9 @@ Refactored for wep app By Penny Rowe and Daniel Neshyba-Rowe
 
 
 import numpy as np
+
 from cambio.utils.schemas import CambioInputs
-
-
-from cambio.utils.cambio_utils import make_emissions_scenario_lte, is_same
+from cambio.utils.cambio_utils import make_emissions_scenario_lte
 from cambio.utils.climate_state import ClimateState
 from cambio.utils.cambio_utils import CambioVar
 
@@ -103,25 +102,24 @@ def cambio(climateParams: CambioInputs) -> dict[str, CambioVar]:
     - albedo_feedback = False
     - temp_anomaly_feedback = False
     Outputs include:
-    - C_atm  carbon amount in atmosphere, GtC
-    - C_ocean  carbon amount in ocean, GtC
+    - c_atm  carbon amount in atmosphere, GtC
+    - c_ocean  carbon amount in ocean, GtC
     - albedo  Earth's albedo
-    - T_anomaly  temperature anomaly, K
-    - pH  ocean pH
-    - T_C  temperature, deg C
-    - F_ha  flux human-atmosphere, GtC/year
-    - F_ao  flux atmosphere-ocean, GtC/year
-    - F_oa  flux ocean-atmosphere, GtC/year
-    - F_la  flux land-atmosphere, GtC/year
-    - F_al  flux atmosphere-land, GtC/year
+    - temp_anomaly  temperature anomaly, K
+    - ph  ocean pH
+    - temp_c  temperature, deg C
+    - flux_ha  flux human-atmosphere, GtC/year
+    - flux_ao  flux atmosphere-ocean, GtC/year
+    - flux_oa  flux ocean-atmosphere, GtC/year
+    - flux_la  flux land-atmosphere, GtC/year
+    - flux_al  flux atmosphere-land, GtC/year
     - year
     """
     # TODO: fix the above docstring
     # TODO: output units
 
     # Call the LTE emissions scenario maker with these parameters
-    # time is in years
-    # flux_human_atm is in GtC/year
+    # [time] = year, [flux_ha] (flux human->atmosphere) = GtC/year
     # TODO: output units
     time, flux_human_atm = make_emissions_scenario_lte(
         climateParams.start_year,
@@ -148,86 +146,15 @@ def cambio(climateParams: CambioInputs) -> dict[str, CambioVar]:
     # initialized to zero
     ntimes = len(time)
     climate: dict[str, CambioVar] = {}
-    for key in climate_state_vars:  # climatestate:
+    for key in climate_state_vars:
         climate[key] = np.zeros(ntimes)
 
     # Propagate through time: loop over all times in scheduled flow
-    for i in range(ntimes):
-        # Update the human-to-atmosphere
-        climateState.update_flux_ha(flux_human_atm[i])
-
-        # Propagate
-        climateState = propagate_climate_state(climateState, climateParams)
+    for i, flux_ha in enumerate(flux_human_atm):
+        climateState.propagate(climateParams, flux_ha)
 
         # Append to climate variables
         for key in climate_state_vars:
             climate[key][i] = getattr(climateState, key)
 
-    # Add variables that are constants
-    # TODO: why is this a numpy array of length 1? Who uses this?)
-    # climate["albedo_trans_temp"] = np.array([climateParams.albedo_transition_temp])
-    # climate["flux_al_trans_temp"] = np.array([climateParams.flux_al_transition_temp])
-
-    # TODO: do we need to do this here?  Why not in the test suite?
-    # QC: make sure the input and output times and human co2 emissions are same
-    if not is_same(time, climate["year"]):
-        raise ValueError("The input and output times differ!")
-    if not is_same(flux_human_atm, climate["flux_ha"]):
-        raise ValueError("The input and output anthropogenic emissions differ!")
-
     return climate
-
-
-def propagate_climate_state(
-    climateState: ClimateState, climateParams: CambioInputs
-) -> ClimateState:
-    """
-    Propagate the state of the climate, with a specified anthropogenic
-    carbon flux
-    @param climateState  The current state of the climate, which is modified here
-    @param climateParams  Climate Parameters (constants that should never be modified!)
-    @returns The updated climate state
-    """
-
-    climate_params = climateParams.dict()
-
-    # Only turn on noise if the noise level is > 0
-    stochastic_c_atm = bool(climate_params["stochastic_c_atm_std_dev"] > 0)
-
-    # Get the temperature anomaly resulting from carbon concentrations
-    climateState.diagnose_temp_anomaly(climate_params)
-
-    # Get fluxes, optionally activating the impact temperature has on land
-    # (via photosynthesis reduction)
-    # TODO: make sure diagnose_flux_oa has if/else as for f_al
-    climateState.diagnose_flux_ocean_atm(climate_params)
-    climateState.diagnose_flux_atm_land(climate_params)
-
-    # Get other fluxes resulting from carbon concentrations
-    climateState.diagnose_flux_atm_ocean(climate_params)
-    climateState.diagnose_flux_land_atm(climate_params)
-
-    # Update concentrations of carbon based on these fluxes
-    climateState.update_c_atm(climate_params["dtime"])
-    climateState.update_c_ocean(climate_params["dtime"])
-
-    # If albedo feedback is turned on, get albedo from temperature anomaly
-    # (optionally activating a constraint in case it's changing too fast)
-    # Otherwise keep it constant
-    if climate_params["albedo_feedback"]:
-        climateState.diagnose_albedo_w_constraint(climate_params)
-        # Get a new temperature anomaly as impacted by albedo
-        climateState.diagnose_delta_t_from_albedo(climate_params)
-
-    # Add stochasticity (random noise) to atmospheric carbon amount, if indicated
-    # TODO: this is not tested
-    if stochastic_c_atm:
-        climateState.diagnose_stochastic_c_atm(climate_params)
-
-    # Ordinary diagnostics
-    climateState.diagnose_ocean_surface_ph(climate_params)
-    climateState.diagnose_actual_temperature()
-    climateState.update_year(climate_params["dtime"])
-
-    # Return the new climate state
-    return climateState
