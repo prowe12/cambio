@@ -1,9 +1,11 @@
 from django.test import TestCase
 from django.urls import reverse
 from pydantic import BaseModel
+import numpy as np
 
 from cambio.utils.schemas import CambioInputs
 from cambio.utils.cambio import cambio
+from cambio.utils.cambio_utils import make_emissions_scenario_lte
 
 
 class Test(BaseModel):
@@ -42,7 +44,7 @@ class Test(BaseModel):
     fractional_flux_al_floor: float = 0.9
 
 
-class cambioTestSample(TestCase):
+class CambioTestSample(TestCase):
     """
     A sample class for trying out testing
     """
@@ -53,6 +55,23 @@ class cambioTestSample(TestCase):
         """
         self.inputs = Test()
 
+    def test_year_f_ha(self):
+        """make sure the input and output times and human co2 emissions are same"""
+        time, flux_ha = make_emissions_scenario_lte(
+            self.inputs.start_year,
+            self.inputs.stop_year,
+            self.inputs.dtime,
+            self.inputs.inv_time_constant,
+            self.inputs.transition_year,
+            self.inputs.transition_duration,
+            self.inputs.long_term_emissions,
+        )
+
+        climatestate = cambio(self.inputs)
+
+        self.assertTrue(np.array_equal(time, climatestate["year"]))
+        self.assertTrue(np.array_equal(flux_ha, climatestate["flux_ha"]))
+
     def test_default(self):
         """Run the cambio model and check the outputs for the default scenario"""
         climatestate = cambio(self.inputs)
@@ -69,7 +88,7 @@ class cambioTestSample(TestCase):
         self.assertAlmostEqual(climatestate["flux_oa"][0], 70.0)
         self.assertAlmostEqual(climatestate["flux_la"][0], 120.0)
         self.assertAlmostEqual(climatestate["flux_al"][0], 120.0109942)
-        # self.assertAlmostEqual(climatestate["T_C"][0],)
+        self.assertAlmostEqual(climatestate["temp_c"][0], 14.0000184325, places=5)
 
         # Test outputs at the ending year (2200)
         self.assertEqual(climatestate["year"][-1], 2199)
@@ -83,10 +102,10 @@ class cambioTestSample(TestCase):
         self.assertAlmostEqual(climatestate["flux_oa"][-1], 102.919734, places=5)
         self.assertAlmostEqual(climatestate["flux_la"][-1], 120.0, places=5)
         self.assertAlmostEqual(climatestate["flux_al"][-1], 123.250647, places=5)
-        # self.assertAlmostEqual(climatestate["T_C"][-1],, places=5)
+        self.assertAlmostEqual(climatestate["temp_c"][-1], 15.38765457, places=5)
 
 
-class cambioTestDefault:
+class CambioTestDefault(TestCase):
     """
     A sample class for trying out testing
     """
@@ -97,6 +116,23 @@ class cambioTestDefault:
         """
         self.inputs = CambioInputs()
 
+    def test_year_f_ha(self):
+        """make sure the input and output times and human co2 emissions are same"""
+        time, flux_ha = make_emissions_scenario_lte(
+            self.inputs.start_year,
+            self.inputs.stop_year,
+            self.inputs.dtime,
+            self.inputs.inv_time_constant,
+            self.inputs.transition_year,
+            self.inputs.transition_duration,
+            self.inputs.long_term_emissions,
+        )
+
+        climatestate = cambio(self.inputs)
+
+        self.assertTrue(np.array_equal(time, climatestate["year"]))
+        self.assertTrue(np.array_equal(flux_ha, climatestate["flux_ha"]))
+
     def test_default(self):
         """Run the cambio model and check the outputs for the default scenario"""
         climatestate = cambio(self.inputs)
@@ -113,7 +149,7 @@ class cambioTestDefault:
         self.assertAlmostEqual(climatestate["flux_oa"][0], 70.0)
         self.assertAlmostEqual(climatestate["flux_la"][0], 120.0)
         self.assertAlmostEqual(climatestate["flux_al"][0], 120.0109942)
-        # self.assertAlmostEqual(climatestate["T_C"][0],)
+        self.assertAlmostEqual(climatestate["temp_c"][0], 14.0000184325, places=5)
 
         # Test outputs at the ending year (2200)
         self.assertEqual(climatestate["year"][-1], 2199)
@@ -127,4 +163,4 @@ class cambioTestDefault:
         self.assertAlmostEqual(climatestate["flux_oa"][-1], 102.919734, places=5)
         self.assertAlmostEqual(climatestate["flux_la"][-1], 120.0, places=5)
         self.assertAlmostEqual(climatestate["flux_al"][-1], 123.250647, places=5)
-        # self.assertAlmostEqual(climatestate["T_C"][-1],, places=5)
+        self.assertAlmostEqual(climatestate["temp_c"][-1], 15.38765457, places=5)
