@@ -36,20 +36,20 @@ class MakePlots:
 
         # Set the conversions for converting from each name, default unit to unit
         self.conversion_funs = {
-            "C_atm": conversion_funs_general["carbon"],
-            "C_ocean": conversion_funs_general["carbon"],
-            "F_ha": conversion_funs_general["flux"],
-            "F_la": conversion_funs_general["flux"],
-            "F_al": conversion_funs_general["flux"],
-            "F_ao": conversion_funs_general["flux"],
-            "F_oa": conversion_funs_general["flux"],
+            "c_atm": conversion_funs_general["carbon"],
+            "c_ocean": conversion_funs_general["carbon"],
+            "flux_ha": conversion_funs_general["flux"],
+            "flux_la": conversion_funs_general["flux"],
+            "flux_al": conversion_funs_general["flux"],
+            "flux_ao": conversion_funs_general["flux"],
+            "flux_oa": conversion_funs_general["flux"],
             "netflux_oa": conversion_funs_general["flux"],
             "netflux_la": conversion_funs_general["flux"],
-            "T_C": conversion_funs_general["temp"],
-            "T_anomaly": conversion_funs_general["temp_anomaly"],
+            "temp_c": conversion_funs_general["temp"],
+            "temp_anomaly": conversion_funs_general["temp_anomaly"],
             "albedo_trans_temp": conversion_funs_general["temp_anomaly"],
             "flux_al_trans_temp": conversion_funs_general["temp_anomaly"],
-            "pH": conversion_funs_general["none"],
+            "ph": conversion_funs_general["none"],
             "albedo": conversion_funs_general["none"],
         }
         # "temp_anomaly_feedback": conversion_funs_general["temp_anomaly"],
@@ -58,48 +58,48 @@ class MakePlots:
             "flux": {
                 "plot": [],
                 "vars": {
-                    "F_ha": ["Human&rarr;Atmos", "solid"],
-                    "F_ao": ["Atmos&rarr;Ocean", "20px"],
-                    "F_oa": ["Ocean&rarr;Atmos", "longdashdot"],
-                    "F_la": ["Land&rarr;Atmos", "longdash"],
-                    "F_al": ["Atmos&rarr;Land", "dashdot"],
+                    "flux_ha": ["Human&rarr;Atmos", "solid"],
+                    "flux_ao": ["Atmos&rarr;Ocean", "20px"],
+                    "flux_oa": ["Ocean&rarr;Atmos", "longdashdot"],
+                    "flux_la": ["Land&rarr;Atmos", "longdash"],
+                    "flux_al": ["Atmos&rarr;Land", "dashdot"],
                     "netflux_oa": ["Net, Ocean&harr;Atmos", "dot"],
                     "netflux_la": ["Net, Land&harr;Atmos ", "dash"],
                 },
                 "units": list(conversion_funs_general["flux"].keys()),
-                "selected_vars": ["F_ha"],
+                "selected_vars": ["flux_ha"],
                 "selected_unit": "GtC/year",
                 "label": "Flux",
             },
             "carbon": {
                 "plot": [],
                 "vars": {
-                    "C_atm": ["Atmospheric", "solid"],
-                    "C_ocean": ["Oceanic", "dash"],
+                    "c_atm": ["Atmospheric", "solid"],
+                    "c_ocean": ["Oceanic", "dash"],
                 },
                 "units": list(conversion_funs_general["carbon"].keys()),
-                "selected_vars": ["C_atm"],
+                "selected_vars": ["c_atm"],
                 "selected_unit": "GtC",
                 "label": "Carbon amount",
             },
             "temp": {
                 "plot": [],
                 "vars": {
-                    "T_anomaly": ["Temperature change", "solid"],
-                    "T_C": ["Temperature", "longdash"],
+                    "temp_anomaly": ["Temperature change", "solid"],
+                    "temp_c": ["Temperature", "longdash"],
                     "albedo_trans_temp": ["Tipping Pt: albedo", "dashdot"],
                     "flux_al_trans_temp": ["Tipping Pt: forest", "dot"],
                 },
                 "units": list(conversion_funs_general["temp"].keys()),
-                "selected_vars": ["T_anomaly"],
+                "selected_vars": ["temp_anomaly"],
                 "selected_unit": "C",
                 "label": "Temperature",
             },
             "pH": {
                 "plot": [],
-                "vars": {"pH": ["pH", "solid"]},
+                "vars": {"ph": ["pH", "solid"]},
                 "units": [],
-                "selected_vars": ["pH"],
+                "selected_vars": ["ph"],
                 "selected_unit": "",
                 "label": "pH",
             },
@@ -160,11 +160,6 @@ class MakePlots:
                 # instance variables defined in the constructor
                 unit = values["selected_unit"]
                 conversion_fun = self.conversion_funs[name][unit]
-
-                # TODO
-                print()
-                print(values["vars"][name][0])
-                print()
 
                 label = values["vars"][name][0]
                 line_style = values["vars"][name][1]
@@ -332,7 +327,6 @@ def dt_c_to_dt_f(dtemp: np.ndarray[float]) -> np.ndarray[float]:
     @param dtemp  Temperature change in Celsius
     @returns  Temperature in Fahrenheit
     """
-    print(type(dtemp))
     return dtemp * 9 / 5
 
 
