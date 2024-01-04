@@ -1,30 +1,23 @@
-FROM python:3.10
+ARG PYTHON_VERSION=3.10-slim-bullseye
 
-# set work directory
-WORKDIR /usr/src/app
+FROM python:${PYTHON_VERSION}
 
-# set environment variables
 ENV PYTHONDONTWRITEBYTECODE 1
 ENV PYTHONUNBUFFERED 1
 
-COPY . .
+RUN mkdir -p /code
 
-# install dependencies
+WORKDIR /code
+
 RUN pip install poetry
-RUN poetry config virtualenvs.create false \
-    && poetry install
+COPY pyproject.toml poetry.lock /code/
+RUN poetry config virtualenvs.create false
+RUN poetry install --only main --no-root --no-interaction
+COPY . /code
 
-# Use when the css is in a separate file (using whitenoise)
-# Set SECRET_KEY for building purposes
-ENV SECRET_KEY "non-secret-key-for-building-purposes"
-RUN poetry run python manage.py collectstatic --noinput
+ENV SECRET_KEY "hxtEWchgWnArpRddYETBDTKp55qNLa65sGQGyuOpXpwfhkcDSi"
+RUN python manage.py collectstatic --noinput
 
 EXPOSE 8000
 
-# This command is good for just getting it running. This will run the server on port 8000
-# CMD ["poetry", "run", "python", "manage.py", "runserver"]
-# CMD ["poetry", "run", "python", "-m", "gunicorn", "config.asgi:application", "--host", "0.0.0.0", "--port", "8000"]
-
-# replace demo.wsgi with <project_name>.wsgi
-CMD ["poetry", "run", "gunicorn", "--bind", ":8000", "--workers", "2", "cambio_site.wsgi"]
-
+CMD ["gunicorn", "--bind", ":8000", "--workers", "2", "cambio_site.wsgi"]
